@@ -80,7 +80,7 @@ a {
 .site {
   position: relative;
   width: 100vw;
-  min-height: 2355svh;
+  min-height: 1566svh;
   min-width: 320px;
   overflow-x: hidden;
   background: #fbf7f7;
@@ -3428,7 +3428,7 @@ a {
   }
 
   .site {
-    min-height: 2355svh;
+    min-height: 1566svh;
   }
 
   .topbar {

@@ -346,15 +346,15 @@ const pageText = {
 };
 
 const scrollTimeline = {
-  priority: { start: 0, end: 1.15 },
-  about: { start: 2.15, end: 3.3 },
-  services: { start: 4.3, end: 5.45 },
-  why: { start: 6.45, end: 7.6 },
-  journey: { start: 8.6, end: 9.75, sequenceStart: 9.75, sequenceEnd: 13.75 },
-  performance: { start: 14.75, end: 16.15 },
-  pricing: { start: 17.15, end: 19.15 },
-  cta: { start: 20.15, end: 21.55 },
-  footer: { start: 21.55, end: 22.55 },
+  priority: { start: 0, end: 0.75 },
+  about: { start: 1.4, end: 2.15 },
+  services: { start: 2.8, end: 3.54 },
+  why: { start: 4.19, end: 4.94 },
+  journey: { start: 5.59, end: 6.34, sequenceStart: 6.34, sequenceEnd: 8.94 },
+  performance: { start: 9.59, end: 10.5 },
+  pricing: { start: 11.15, end: 12.45 },
+  cta: { start: 13.1, end: 14.01 },
+  footer: { start: 14.01, end: 14.66 },
 };
 
 function App() {
@@ -930,7 +930,7 @@ function Hero({ activeIndex = 0, language, onLanguageChange, onNavigate }) {
           onClick={(event) => {
             event.preventDefault();
             window.scrollTo({
-              top: window.innerHeight * (scrollTimeline.pricing.start + 1.72),
+              top: window.innerHeight * (scrollTimeline.pricing.start + 1.12),
               behavior: "smooth",
             });
           }}
