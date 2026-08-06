@@ -2054,7 +2054,7 @@ a {
   position: absolute;
   top: 17.5vh;
   left: 50%;
-  width: clamp(360px, 30vw, 560px);
+  width: clamp(360px, min(30vw, calc(71vh - 60px)), 560px);
   text-align: center;
   transform: translateY(calc(var(--why-rest) * 80px));
 }
@@ -2075,7 +2075,7 @@ a {
   z-index: 1;
   top: 17.5vh;
   left: 50%;
-  width: clamp(360px, 30vw, 560px);
+  width: clamp(360px, min(30vw, calc(71vh - 60px)), 560px);
   aspect-ratio: 458 / 529;
   height: auto;
   object-fit: cover;
