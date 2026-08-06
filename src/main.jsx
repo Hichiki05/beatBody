@@ -357,6 +357,17 @@ const scrollTimeline = {
   footer: { start: 14.01, end: 14.66 },
 };
 
+const homeScrollAnchors = [
+  0,
+  scrollTimeline.about.start,
+  scrollTimeline.services.start,
+  scrollTimeline.why.start,
+  scrollTimeline.journey.start,
+  scrollTimeline.pricing.start,
+  scrollTimeline.cta.start,
+  scrollTimeline.footer.start,
+];
+
 function App() {
   const [ready, setReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
@@ -416,6 +427,107 @@ function App() {
   useEffect(() => {
     window.localStorage.setItem(DASHBOARD_FEATURED_SERVICES_STORAGE_KEY, JSON.stringify(featuredServiceTitles));
   }, [featuredServiceTitles]);
+
+  useEffect(() => {
+    if (page !== "home") return undefined;
+
+    let isSnapping = false;
+    let touchStartY = 0;
+
+    const canScrollPerformanceContent = (eventTarget, deltaY) => {
+      if (!document.documentElement.classList.contains("performance-scroll-enabled")) return false;
+      const performanceContent = eventTarget?.closest?.(".performance-content");
+      if (!performanceContent) return false;
+
+      const atTop = performanceContent.scrollTop <= 0;
+      const atBottom =
+        performanceContent.scrollTop + performanceContent.clientHeight >= performanceContent.scrollHeight - 1;
+
+      return (deltaY < 0 && !atTop) || (deltaY > 0 && !atBottom);
+    };
+
+    const isInsideJourneySequence = (deltaY = 0) => {
+      const viewportHeight = window.innerHeight || 1;
+      const currentProgress = window.scrollY / viewportHeight;
+      return (
+        currentProgress >= scrollTimeline.journey.start - 0.02 &&
+        currentProgress < scrollTimeline.performance.start - 0.08
+      ) || (
+        deltaY < 0 &&
+        currentProgress >= scrollTimeline.performance.start - 0.08 &&
+        currentProgress <= scrollTimeline.performance.start + 0.35
+      );
+    };
+
+    const snapToSection = (direction) => {
+      if (isSnapping || !direction) return;
+
+      const viewportHeight = window.innerHeight || 1;
+      const currentProgress = window.scrollY / viewportHeight;
+      if (isInsideJourneySequence(direction)) return;
+      const currentIndex = homeScrollAnchors.reduce((closestIndex, anchor, index) => {
+        const closestDistance = Math.abs(homeScrollAnchors[closestIndex] - currentProgress);
+        const distance = Math.abs(anchor - currentProgress);
+        return distance < closestDistance ? index : closestIndex;
+      }, 0);
+      const targetIndex = Math.min(
+        homeScrollAnchors.length - 1,
+        Math.max(0, currentIndex + direction),
+      );
+
+      if (targetIndex === currentIndex) return;
+      isSnapping = true;
+      window.scrollTo({
+        top: homeScrollAnchors[targetIndex] * viewportHeight,
+        behavior: "smooth",
+      });
+      window.setTimeout(() => {
+        isSnapping = false;
+      }, 720);
+    };
+
+    const handleWheel = (event) => {
+      if (Math.abs(event.deltaY) < 18) return;
+      if (isInsideJourneySequence(event.deltaY)) return;
+      if (canScrollPerformanceContent(event.target, event.deltaY)) return;
+      event.preventDefault();
+      snapToSection(event.deltaY > 0 ? 1 : -1);
+    };
+
+    const handleTouchStart = (event) => {
+      touchStartY = event.touches?.[0]?.clientY || 0;
+    };
+
+    const handleTouchMove = (event) => {
+      const currentY = event.touches?.[0]?.clientY || touchStartY;
+      const deltaY = touchStartY - currentY;
+      if (Math.abs(deltaY) < 8) return;
+      if (isInsideJourneySequence(deltaY)) return;
+      if (canScrollPerformanceContent(event.target, deltaY)) return;
+      event.preventDefault();
+    };
+
+    const handleTouchEnd = (event) => {
+      const touchEndY = event.changedTouches?.[0]?.clientY || touchStartY;
+      const deltaY = touchStartY - touchEndY;
+      if (Math.abs(deltaY) < 42) return;
+      if (isInsideJourneySequence(deltaY)) return;
+      if (canScrollPerformanceContent(event.target, deltaY)) return;
+      snapToSection(deltaY > 0 ? 1 : -1);
+    };
+
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [page]);
 
   useEffect(() => {
     let frameId = 0;
@@ -507,6 +619,7 @@ function App() {
       document.documentElement.style.setProperty("--performance-tile-2", String(performanceTile2));
       document.documentElement.style.setProperty("--performance-tile-3", String(performanceTile3));
       document.documentElement.style.setProperty("--performance-tile-4", String(performanceTile4));
+      document.documentElement.classList.toggle("performance-scroll-enabled", performanceProgress > 0.995 && pricingProgress < 0.02);
       document.documentElement.style.setProperty("--pricing-shift", `${(1 - pricingPanel) * 100}vh`);
       document.documentElement.style.setProperty("--pricing-exit-shift", exitShift(ctaPanel));
       document.documentElement.style.setProperty("--pricing-title", String(pricingTitle));

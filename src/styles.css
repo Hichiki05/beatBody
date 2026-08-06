@@ -2187,16 +2187,16 @@ a {
   display: block;
   width: auto;
   height: 55vh;
-  opacity: 0;
+  opacity: 1;
+  visibility: hidden;
   translate: 0 clamp(120px, 22vh, 240px);
   scale: 0.84;
   transform-origin: 45% 55%;
-  filter: blur(4px);
+  filter: none;
   transition:
-    opacity 0.35s ease,
     translate 0.72s cubic-bezier(0.16, 1, 0.3, 1),
     scale 0.72s cubic-bezier(0.16, 1, 0.3, 1),
-    filter 0.45s ease;
+    visibility 0s linear 0.72s;
 }
 
 .journey-card:nth-child(4) {
@@ -2205,9 +2205,13 @@ a {
 
 .journey-card.is-visible {
   opacity: 1;
+  visibility: visible;
   translate: 0 0;
   scale: 1;
-  filter: blur(0);
+  transition:
+    translate 0.72s cubic-bezier(0.16, 1, 0.3, 1),
+    scale 0.72s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s;
 }
 
 .journey-book {
@@ -4974,7 +4978,7 @@ a {
   }
 
   .journey-overlay h2 {
-    top: 13vh;
+    top: max(13vh, 104px);
     left: 6vw;
     width: 48vw;
     font-size: 16px;
@@ -4991,13 +4995,13 @@ a {
   .journey-book {
     left: auto;
     right: 5vw;
-    top: 13vh;
+    top: max(13vh, 104px);
     width: 34vw;
     height: auto;
   }
 
   .journey-rail {
-    top: 28vh;
+    top: max(28vh, 220px);
     right: 5vw;
     height: 46vh;
   }
@@ -7855,5 +7859,74 @@ a {
 
   .dashboard-calendar-month {
     flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  .mobile-menu-overlay {
+    backdrop-filter: blur(100px) !important;
+    -webkit-backdrop-filter: blur(100px) !important;
+  }
+
+  .mobile-menu-header {
+    backdrop-filter: blur(100px) !important;
+    -webkit-backdrop-filter: blur(100px) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero > .topbar,
+  .site > .post-topbar {
+    min-height: 72px !important;
+    height: 72px !important;
+    padding: 8px 18px !important;
+    align-items: center !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  .hero > .topbar::before,
+  .site > .post-topbar::before {
+    display: none !important;
+  }
+
+  .hero > .topbar .brand,
+  .site > .post-topbar .brand,
+  .hero > .topbar .mobile-menu-toggle,
+  .site > .post-topbar .mobile-menu-toggle {
+    align-self: center !important;
+  }
+
+  .hero > .topbar .mobile-menu-toggle,
+  .site > .post-topbar .mobile-menu-toggle {
+    width: 56px !important;
+    height: 56px !important;
+    transform: none !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .performance-section {
+    pointer-events: none !important;
+  }
+
+  .performance-scroll-enabled .performance-section {
+    pointer-events: auto !important;
+  }
+
+  .performance-content {
+    overflow-y: hidden !important;
+    overscroll-behavior-y: contain !important;
+    -webkit-overflow-scrolling: auto !important;
+    will-change: transform !important;
+  }
+
+  .performance-scroll-enabled .performance-content {
+    overflow-y: auto !important;
+    overscroll-behavior-y: auto !important;
+    will-change: scroll-position !important;
   }
 }
