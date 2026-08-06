@@ -2929,18 +2929,18 @@ function FooterSection({ staticMode = false, language = "fr" }) {
           <div className="footer-social">
             <h2>{text.followUs}</h2>
             <div className="social-list" aria-label="Social links">
-              <a href="#" aria-label="Facebook">f</a>
-              <a href="#" aria-label="Instagram">ig</a>
-              <a href="#" aria-label="TikTok">tt</a>
-              <a href="#" aria-label="LinkedIn">in</a>
+              <a href="#" aria-label="Facebook"><SocialIcon type="facebook" /></a>
+              <a href="#" aria-label="Instagram"><SocialIcon type="instagram" /></a>
+              <a href="#" aria-label="TikTok"><SocialIcon type="tiktok" /></a>
+              <a href="#" aria-label="LinkedIn"><SocialIcon type="linkedin" /></a>
             </div>
             <div className="store-list">
               <a href="#" className="store-badge">
-                <strong>A</strong>
+                <StoreIcon type="apple" />
                 <span>Download on the<br />App Store</span>
               </a>
               <a href="#" className="store-badge">
-                <strong>&#9654;</strong>
+                <StoreIcon type="google" />
                 <span>Get it on<br />Google Play</span>
               </a>
             </div>
@@ -2970,6 +2970,76 @@ function FooterColumn({ title, items }) {
   );
 }
 
+function SocialIcon({ type }) {
+  if (type === "facebook") {
+    return (
+      <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <path fill="#1877f2" d="M30 16.09C30 8.3 23.73 2 16 2S2 8.3 2 16.09C2 23.13 7.12 28.97 13.81 30v-9.84h-3.55v-4.07h3.55v-3.1c0-3.53 2.09-5.48 5.29-5.48 1.53 0 3.13.28 3.13.28v3.46h-1.76c-1.73 0-2.27 1.08-2.27 2.19v2.65h3.86l-.62 4.07H18.2V30C24.88 28.97 30 23.13 30 16.09Z" />
+      </svg>
+    );
+  }
+
+  if (type === "instagram") {
+    return (
+      <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <defs>
+          <radialGradient id="footerInstagramGradient" cx="30%" cy="105%" r="115%">
+            <stop offset="0" stopColor="#feda75" />
+            <stop offset=".35" stopColor="#fa7e1e" />
+            <stop offset=".55" stopColor="#d62976" />
+            <stop offset=".75" stopColor="#962fbf" />
+            <stop offset="1" stopColor="#4f5bd5" />
+          </radialGradient>
+        </defs>
+        <rect x="4" y="4" width="24" height="24" rx="7" fill="url(#footerInstagramGradient)" />
+        <rect x="9" y="9" width="14" height="14" rx="4.5" fill="none" stroke="#fff" strokeWidth="2.2" />
+        <circle cx="16" cy="16" r="3.8" fill="none" stroke="#fff" strokeWidth="2.2" />
+        <circle cx="22.2" cy="9.8" r="1.35" fill="#fff" />
+      </svg>
+    );
+  }
+
+  if (type === "tiktok") {
+    return (
+      <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <path fill="#25f4ee" d="M20.25 7.1c.55 3.05 2.25 4.88 5.25 5.08v3.55a9.2 9.2 0 0 1-5.16-1.57v6.77c0 8.6-9.37 11.28-13.12 5.12-2.4-3.96-.93-10.93 6.78-11.2v3.75c-.54.09-1.13.23-1.65.43-1.58.6-2.48 1.72-2.23 3.7.48 3.78 7.45 4.9 6.88-2.49V7.1h3.25Z" />
+        <path fill="#fe2c55" d="M18.9 6h3.2c.39 2.12 1.44 3.65 3.15 4.5v3.7a9 9 0 0 1-4.92-1.59v6.78c0 8.6-9.37 11.28-13.12 5.12a6.33 6.33 0 0 1-.86-3.08c1.15 3.66 7.2 4.4 6.68-2.35V6h5.87Z" opacity=".95" />
+        <path fill="#111" d="M18.9 6c.55 3.05 2.25 4.88 5.25 5.08v3.55a9.2 9.2 0 0 1-5.16-1.57v6.77c0 8.6-9.37 11.28-13.12 5.12-2.4-3.96-.93-10.93 6.78-11.2v3.75c-.54.09-1.13.23-1.65.43-1.58.6-2.48 1.72-2.23 3.7.48 3.78 7.45 4.9 6.88-2.49V6h3.25Z" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 36 36" aria-hidden="true" focusable="false">
+      <circle cx="18" cy="18" r="14" fill="#0a66c2" />
+      <path fill="#fff" d="M11.2 15h3.52v10.7H11.2V15Zm1.76-4.75a2.02 2.02 0 1 1 0 4.04 2.02 2.02 0 0 1 0-4.04ZM17 15h3.36v1.46h.05c.47-.86 1.62-1.78 3.33-1.78 3.56 0 4.22 2.29 4.22 5.27v5.75h-3.52v-5.1c0-1.22-.02-2.78-1.73-2.78-1.73 0-1.99 1.32-1.99 2.69v5.19H17V15Z" />
+    </svg>
+  );
+}
+
+function StoreIcon({ type }) {
+  if (type === "google") {
+    return (
+      <strong className="store-icon store-icon-google" aria-hidden="true">
+        <svg viewBox="0 0 32 32" focusable="false">
+          <path fill="#34a853" d="M6 4.7c-.36.39-.57.98-.57 1.76v19.08c0 .78.21 1.37.57 1.76l10.7-11.3L6 4.7Z" />
+          <path fill="#4285f4" d="m20.06 12.43-3.36 3.56 3.44 3.62 4.08-2.36c1.15-.66 1.15-1.74 0-2.4l-4.16-2.42Z" />
+          <path fill="#fbbc04" d="m6 4.7 14.06 7.73-3.36 3.56L6 4.7Zm0 22.6 14.14-7.69-3.44-3.62L6 27.3Z" />
+          <path fill="#ea4335" d="m6 27.3 10.7-11.31 3.44 3.62L6 27.3Z" />
+        </svg>
+      </strong>
+    );
+  }
+
+  return (
+    <strong className="store-icon store-icon-apple" aria-hidden="true">
+      <svg viewBox="0 0 32 32" focusable="false">
+        <path fill="#fff" d="M23.1 17.1 21 15.9l-4.1 7.1a1.42 1.42 0 0 0 2.46 1.42l3.74-7.32Zm-8.75-3.72L9.4 21.94H7.15a1.38 1.38 0 1 0 0 2.76h3.06c.5 0 .96-.27 1.21-.7l5.31-9.2-2.38-1.42Zm3.76-3.34.82-1.42a1.42 1.42 0 1 0-2.46-1.42l-.82 1.42-.82-1.42a1.42 1.42 0 0 0-2.46 1.42l5.38 9.32h-3.01a1.38 1.38 0 1 0 0 2.76h6.9c.5 0 .96-.27 1.21-.7.25-.43.25-.97 0-1.4l-4.74-8.56Zm6.74 11.9H23.5a1.38 1.38 0 0 0 0 2.76h1.35a1.38 1.38 0 0 0 0-2.76Z" />
+      </svg>
+    </strong>
+  );
+}
+
 function ServicesPageFooter({ language = "fr" }) {
   const text = pageText[language] || pageText.fr;
   const footerSections = text.footerSections.map(([title, items]) => ({ title, items }));
@@ -2988,10 +3058,20 @@ function ServicesPageFooter({ language = "fr" }) {
           <div className="footer-social">
             <h2>{text.followUs}</h2>
             <div className="social-list" aria-label="Social links">
-              <a href="#" aria-label="Facebook">f</a>
-              <a href="#" aria-label="Instagram">◎</a>
-              <a href="#" aria-label="TikTok">♪</a>
-              <a href="#" aria-label="LinkedIn">in</a>
+              <a href="#" aria-label="Facebook"><SocialIcon type="facebook" /></a>
+              <a href="#" aria-label="Instagram"><SocialIcon type="instagram" /></a>
+              <a href="#" aria-label="TikTok"><SocialIcon type="tiktok" /></a>
+              <a href="#" aria-label="LinkedIn"><SocialIcon type="linkedin" /></a>
+            </div>
+            <div className="store-list">
+              <a href="#" className="store-badge">
+                <StoreIcon type="apple" />
+                <span>Download on the<br />App Store</span>
+              </a>
+              <a href="#" className="store-badge">
+                <StoreIcon type="google" />
+                <span>Get it on<br />Google Play</span>
+              </a>
             </div>
           </div>
           {footerSections.map((section) => (
