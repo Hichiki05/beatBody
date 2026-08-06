@@ -1259,7 +1259,7 @@ function ServicesSection({ onNavigate, items = services, language = "fr" }) {
   }, []);
 
   return (
-    <section className="services-section" aria-label="Beat Body services">
+    <section className={`services-section services-section-${language}`} aria-label="Beat Body services">
       <div className="services-content">
         <div className="services-heading">
           <p className="services-kicker">

@@ -4724,6 +4724,12 @@ a {
     flex-shrink: 0;
   }
 
+  .services-section-fr .services-kicker {
+    white-space: normal;
+    font-size: clamp(9px, 2.3vw, 10.5px);
+    line-height: 1.25;
+  }
+
   .services-grid {
     display: flex;
     grid-template-columns: none;
