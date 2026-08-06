@@ -5321,6 +5321,10 @@ a {
     font-size: 9.5px;
   }
 
+  .store-badge:nth-child(2) {
+    transform: none;
+  }
+
   .store-badge strong {
     width: 26px;
     height: 26px;
