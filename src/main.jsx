@@ -436,6 +436,48 @@ function App() {
 
     let isSnapping = false;
     let touchStartY = 0;
+    let lastTouchY = 0;
+    let performanceTouchConsumed = false;
+    let snapFrame = 0;
+
+    const easeInOutCubic = (value) =>
+      value < 0.5 ? 4 * value * value * value : 1 - Math.pow(-2 * value + 2, 3) / 2;
+
+    const smoothSnapTo = (targetTop) => {
+      const startTop = window.scrollY;
+      const distance = targetTop - startTop;
+      const isMobileViewport = window.matchMedia("(max-width: 900px)").matches;
+
+      if (!isMobileViewport) {
+        window.scrollTo({
+          top: targetTop,
+          behavior: "smooth",
+        });
+        return 720;
+      }
+
+      if (snapFrame) {
+        window.cancelAnimationFrame(snapFrame);
+      }
+
+      const duration = 1150;
+      const startTime = window.performance.now();
+
+      const animate = (currentTime) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(1, elapsed / duration);
+        window.scrollTo(0, startTop + distance * easeInOutCubic(progress));
+
+        if (progress < 1) {
+          snapFrame = window.requestAnimationFrame(animate);
+        } else {
+          snapFrame = 0;
+        }
+      };
+
+      snapFrame = window.requestAnimationFrame(animate);
+      return duration;
+    };
 
     const canScrollPerformanceContent = (eventTarget, deltaY) => {
       if (!document.documentElement.classList.contains("performance-scroll-enabled")) return false;
@@ -447,6 +489,33 @@ function App() {
         performanceContent.scrollTop + performanceContent.clientHeight >= performanceContent.scrollHeight - 1;
 
       return (deltaY < 0 && !atTop) || (deltaY > 0 && !atBottom);
+    };
+
+    const consumePerformanceScroll = (deltaY) => {
+      const viewportHeight = window.innerHeight || 1;
+      const currentProgress = window.scrollY / viewportHeight;
+      const isPerformanceStage =
+        currentProgress >= scrollTimeline.performance.start + 0.42 &&
+        currentProgress < scrollTimeline.pricing.start - 0.06;
+
+      if (!isPerformanceStage || Math.abs(deltaY) < 1) return false;
+
+      const performanceContent = document.querySelector(".performance-content");
+      if (!performanceContent) return false;
+
+      const maxScrollTop = performanceContent.scrollHeight - performanceContent.clientHeight;
+      if (maxScrollTop <= 1) return false;
+
+      const atTop = performanceContent.scrollTop <= 1;
+      const atBottom = performanceContent.scrollTop >= maxScrollTop - 1;
+
+      if ((deltaY > 0 && atBottom) || (deltaY < 0 && atTop)) return false;
+
+      performanceContent.scrollTop = Math.min(
+        maxScrollTop,
+        Math.max(0, performanceContent.scrollTop + deltaY),
+      );
+      return true;
     };
 
     const isInsideJourneySequence = (deltaY = 0) => {
@@ -467,14 +536,21 @@ function App() {
 
       const viewportHeight = window.innerHeight || 1;
       const currentProgress = window.scrollY / viewportHeight;
+      const isMobileViewport = window.matchMedia("(max-width: 900px)").matches;
+      const snapAnchors = isMobileViewport
+        ? [
+            ...homeScrollAnchors.slice(0, -1),
+            scrollTimeline.footer.start + (scrollTimeline.footer.end - scrollTimeline.footer.start) * 0.82,
+          ]
+        : homeScrollAnchors;
       if (isInsideJourneySequence(direction)) return;
       const snapOffset = 0.06;
       let targetIndex = -1;
       if (direction > 0) {
-        targetIndex = homeScrollAnchors.findIndex((anchor) => anchor > currentProgress + snapOffset);
+        targetIndex = snapAnchors.findIndex((anchor) => anchor > currentProgress + snapOffset);
       } else {
-        for (let index = homeScrollAnchors.length - 1; index >= 0; index -= 1) {
-          if (homeScrollAnchors[index] < currentProgress - snapOffset) {
+        for (let index = snapAnchors.length - 1; index >= 0; index -= 1) {
+          if (snapAnchors[index] < currentProgress - snapOffset) {
             targetIndex = index;
             break;
           }
@@ -483,18 +559,19 @@ function App() {
 
       if (targetIndex < 0) return;
       isSnapping = true;
-      window.scrollTo({
-        top: homeScrollAnchors[targetIndex] * viewportHeight,
-        behavior: "smooth",
-      });
+      const snapDuration = smoothSnapTo(snapAnchors[targetIndex] * viewportHeight);
       window.setTimeout(() => {
         isSnapping = false;
-      }, 720);
+      }, snapDuration + 120);
     };
 
     const handleWheel = (event) => {
       if (Math.abs(event.deltaY) < 18) return;
       if (isInsideJourneySequence(event.deltaY)) return;
+      if (consumePerformanceScroll(event.deltaY)) {
+        event.preventDefault();
+        return;
+      }
       if (canScrollPerformanceContent(event.target, event.deltaY)) return;
       event.preventDefault();
       snapToSection(event.deltaY > 0 ? 1 : -1);
@@ -502,20 +579,31 @@ function App() {
 
     const handleTouchStart = (event) => {
       touchStartY = event.touches?.[0]?.clientY || 0;
+      lastTouchY = touchStartY;
+      performanceTouchConsumed = false;
     };
 
     const handleTouchMove = (event) => {
       const currentY = event.touches?.[0]?.clientY || touchStartY;
-      const deltaY = touchStartY - currentY;
-      if (Math.abs(deltaY) < 8) return;
-      if (isInsideJourneySequence(deltaY)) return;
-      if (canScrollPerformanceContent(event.target, deltaY)) return;
+      const deltaY = lastTouchY - currentY;
+      const totalDeltaY = touchStartY - currentY;
+      if (Math.abs(totalDeltaY) < 8) return;
+      if (isInsideJourneySequence(totalDeltaY)) return;
+      if (consumePerformanceScroll(deltaY)) {
+        performanceTouchConsumed = true;
+        lastTouchY = currentY;
+        event.preventDefault();
+        return;
+      }
+      if (canScrollPerformanceContent(event.target, totalDeltaY)) return;
       event.preventDefault();
+      lastTouchY = currentY;
     };
 
     const handleTouchEnd = (event) => {
       const touchEndY = event.changedTouches?.[0]?.clientY || touchStartY;
       const deltaY = touchStartY - touchEndY;
+      if (performanceTouchConsumed) return;
       if (Math.abs(deltaY) < 42) return;
       if (isInsideJourneySequence(deltaY)) return;
       if (canScrollPerformanceContent(event.target, deltaY)) return;
@@ -532,6 +620,9 @@ function App() {
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
+      if (snapFrame) {
+        window.cancelAnimationFrame(snapFrame);
+      }
     };
   }, [page]);
 
