@@ -21,7 +21,6 @@ import {
   Crown,
   Wrench,
   User,
-  Settings,
   LogOut,
   Search,
   Heart,
@@ -36,6 +35,15 @@ import "./styles.css";
 const DASHBOARD_SERVICES_STORAGE_KEY = "beat-body-dashboard-services";
 const DASHBOARD_FEATURED_SERVICES_STORAGE_KEY = "beat-body-dashboard-featured-services";
 const LANGUAGE_STORAGE_KEY = "beat-body-language";
+const CONTACT_PHONES_STORAGE_KEY = "beat-body-contact-phones";
+const CONTACT_EMAILS_STORAGE_KEY = "beat-body-contact-emails";
+const CONTACT_SETTINGS_STORAGE_KEY = "beat-body-contact-settings";
+const BLOCKED_DATES_STORAGE_KEY = "beat-body-blocked-dates";
+const DASHBOARD_UNLOCK_STORAGE_KEY = "beat-body-dashboard-unlocked";
+const DASHBOARD_ACCESS_CODE = "0000";
+const MAX_CONTACT_PHONES = 3;
+const MAX_CONTACT_EMAILS = 2;
+const DEFAULT_CONTACT_PHONES = ["+212 645461998"];
 
 const readStoredJson = (key, fallback) => {
   if (typeof window === "undefined") return fallback;
@@ -46,6 +54,29 @@ const readStoredJson = (key, fallback) => {
   } catch {
     return fallback;
   }
+};
+
+const cleanStringList = (items, maxItems) => {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)
+    .slice(0, maxItems);
+};
+
+const readStoredContactSettings = () => {
+  const storedSettings = readStoredJson(CONTACT_SETTINGS_STORAGE_KEY, null);
+  const storedPhones = cleanStringList(storedSettings?.phones, MAX_CONTACT_PHONES);
+  const storedEmails = cleanStringList(storedSettings?.emails, MAX_CONTACT_EMAILS);
+
+  if (storedSettings && (storedPhones.length || storedEmails.length || Array.isArray(storedSettings?.phones))) {
+    return { phones: storedPhones, emails: storedEmails };
+  }
+
+  return {
+    phones: cleanStringList(readStoredJson(CONTACT_PHONES_STORAGE_KEY, DEFAULT_CONTACT_PHONES), MAX_CONTACT_PHONES),
+    emails: cleanStringList(readStoredJson(CONTACT_EMAILS_STORAGE_KEY, []), MAX_CONTACT_EMAILS),
+  };
 };
 
 const readStoredLanguage = () => {
@@ -112,7 +143,7 @@ const pageText = {
   fr: {
     servicesKicker: "UNE NOUVELLE ÈRE DU FITNESS ET DE LA RÉCUPÉRATION",
     priorityKicker: "NOTRE PRIORITÉ",
-    priorityWords: ["TECHNOLOGIE", "AVANCÉE", "ACCOMPAGNEMENT EXPERT", "RÉSULTATS", "EXCEPTIONNELS"],
+    priorityWords: ["TECHNOLOGIE", "AVANCÉE", "ACCOMPAGNEMENT", "EXPERT", "RÉSULTATS", "EXCEPTIONNELS"],
     aboutPreviewTitle: "À PROPOS DE BEAT BODY",
     aboutPreviewBody: "Beat Body combine la technologie EMS avancée, les solutions de récupération sportive et le coaching personnalisé pour vous aider à atteindre vos objectifs plus vite, plus intelligemment et en moins de temps que les méthodes d'entraînement traditionnelles.",
     allServices: "TOUS LES SERVICES",
@@ -196,7 +227,7 @@ const pageText = {
   en: {
     servicesKicker: "A NEW ERA OF FITNESS AND RECOVERY",
     priorityKicker: "OUR PRIORITY",
-    priorityWords: ["ADVANCED", "TECHNOLOGY", "EXPERT GUIDANCE", "EXCEPTIONAL", "RESULTS"],
+    priorityWords: ["ADVANCED", "TECHNOLOGY", "EXPERT", "GUIDANCE", "EXCEPTIONAL", "RESULTS"],
     aboutPreviewTitle: "ABOUT BEAT BODY",
     aboutPreviewBody: "Beat Body combines advanced EMS technology, sports recovery solutions, and personalized coaching to help you achieve your goals faster, smarter, and with less time than traditional training methods.",
     allServices: "ALL SERVICES",
@@ -262,7 +293,7 @@ const pageText = {
   ar: {
     servicesKicker: "عصر جديد للياقة والتعافي",
     priorityKicker: "أولويتنا",
-    priorityWords: ["تكنولوجيا", "متقدمة", "إرشاد خبير", "نتائج", "استثنائية"],
+    priorityWords: ["تكنولوجيا", "متقدمة", "إرشاد", "خبير", "نتائج", "استثنائية"],
     aboutPreviewTitle: "عن Beat Body",
     aboutPreviewBody: "تجمع Beat Body بين تقنية EMS المتقدمة وحلول التعافي الرياضي والتدريب الشخصي لمساعدتك على تحقيق أهدافك بشكل أسرع وأذكى وبوقت أقل من طرق التدريب التقليدية.",
     allServices: "كل الخدمات",
@@ -376,13 +407,28 @@ function App() {
   const [language, setLanguage] = useState(readStoredLanguage);
   const [journeyHeaderActive, setJourneyHeaderActive] = useState(false);
   const [heroHeaderActive, setHeroHeaderActive] = useState(true);
+  const [dashboardUnlocked, setDashboardUnlocked] = useState(
+    () => typeof window !== "undefined" && window.sessionStorage.getItem(DASHBOARD_UNLOCK_STORAGE_KEY) === "true",
+  );
   const [page, setPage] = useState(
     () => (typeof window !== "undefined" && window.location.hash === "#dashboard" ? "dashboard" : "home"),
   );
   const [pricingPlansData, setPricingPlansData] = useState(() => pricingPlans);
-  const [contactPhones, setContactPhones] = useState(["+212 645461998"]);
-  const [contactEmails, setContactEmails] = useState([]);
-  const [blockedDates, setBlockedDates] = useState(() => new Set());
+  const initialContactSettingsRef = useRef(null);
+  if (!initialContactSettingsRef.current) {
+    initialContactSettingsRef.current = readStoredContactSettings();
+  }
+  const [contactPhones, setContactPhones] = useState(() => {
+    const phones = initialContactSettingsRef.current?.phones || [];
+    return phones.length ? phones : DEFAULT_CONTACT_PHONES;
+  });
+  const [contactEmails, setContactEmails] = useState(() => {
+    return initialContactSettingsRef.current?.emails || [];
+  });
+  const [blockedDates, setBlockedDates] = useState(() => {
+    const storedDates = readStoredJson(BLOCKED_DATES_STORAGE_KEY, []);
+    return new Set(Array.isArray(storedDates) ? storedDates : []);
+  });
   const [serviceItems, setServiceItems] = useState(() => {
     const storedServices = readStoredJson(DASHBOARD_SERVICES_STORAGE_KEY, null);
     return Array.isArray(storedServices) ? storedServices : servicesPageItems;
@@ -430,6 +476,36 @@ function App() {
   useEffect(() => {
     window.localStorage.setItem(DASHBOARD_FEATURED_SERVICES_STORAGE_KEY, JSON.stringify(featuredServiceTitles));
   }, [featuredServiceTitles]);
+
+  useEffect(() => {
+    const phones = cleanStringList(contactPhones, MAX_CONTACT_PHONES);
+    const emails = cleanStringList(contactEmails, MAX_CONTACT_EMAILS);
+    window.localStorage.setItem(CONTACT_SETTINGS_STORAGE_KEY, JSON.stringify({ phones, emails }));
+    window.localStorage.setItem(CONTACT_PHONES_STORAGE_KEY, JSON.stringify(phones));
+    window.localStorage.setItem(CONTACT_EMAILS_STORAGE_KEY, JSON.stringify(emails));
+  }, [contactPhones, contactEmails]);
+
+  useEffect(() => {
+    window.localStorage.setItem(BLOCKED_DATES_STORAGE_KEY, JSON.stringify([...blockedDates]));
+  }, [blockedDates]);
+
+  useEffect(() => {
+    const handleStorageChange = (event) => {
+      if (event.key !== CONTACT_SETTINGS_STORAGE_KEY || !event.newValue) return;
+      try {
+        const settings = JSON.parse(event.newValue);
+        const phones = cleanStringList(settings?.phones, MAX_CONTACT_PHONES);
+        const emails = cleanStringList(settings?.emails, MAX_CONTACT_EMAILS);
+        setContactPhones(phones.length ? phones : DEFAULT_CONTACT_PHONES);
+        setContactEmails(emails);
+      } catch {
+        // Ignore malformed external storage updates.
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   useEffect(() => {
     if (page !== "home") return undefined;
@@ -758,7 +834,32 @@ function App() {
     window.scrollTo({ top: 0, behavior: "auto" });
   };
 
+  const unlockDashboard = () => {
+    window.sessionStorage.setItem(DASHBOARD_UNLOCK_STORAGE_KEY, "true");
+    setDashboardUnlocked(true);
+    setPage("dashboard");
+    window.location.hash = "dashboard";
+    window.scrollTo({ top: 0, behavior: "auto" });
+  };
+
+  const lockDashboard = () => {
+    window.sessionStorage.removeItem(DASHBOARD_UNLOCK_STORAGE_KEY);
+    setDashboardUnlocked(false);
+    setPage("home");
+    window.location.hash = "";
+    window.scrollTo({ top: 0, behavior: "auto" });
+  };
+
+  const homeServiceItems = featuredServiceTitles
+    .map((title) => serviceItems.find((service) => service.title === title))
+    .filter(Boolean)
+    .slice(0, 3);
+
   if (page === "dashboard") {
+    if (!dashboardUnlocked) {
+      return <DashboardAccessPage onSuccess={unlockDashboard} onCancel={() => navigateTo("home")} />;
+    }
+
     return (
       <DashboardPage
         plans={pricingPlansData}
@@ -773,6 +874,7 @@ function App() {
         setServices={setServiceItems}
         featuredTitles={featuredServiceTitles}
         setFeaturedTitles={setFeaturedServiceTitles}
+        onExit={lockDashboard}
       />
     );
   }
@@ -849,19 +951,13 @@ function App() {
       <ServicesSection
         onNavigate={navigateTo}
         language={language}
-        items={
-          featuredServiceTitles.length
-            ? featuredServiceTitles
-                .map((title) => serviceItems.find((service) => service.title === title))
-                .filter(Boolean)
-            : services
-        }
+        items={homeServiceItems.length ? homeServiceItems : services}
       />
       <WhySection language={language} />
       <JourneySection language={language} />
       <PerformanceSection language={language} />
-      <PricingSection plans={pricingPlansData} language={language} />
-      <FinalCtaSection language={language} />
+      <PricingSection plans={pricingPlansData} language={language} onNavigate={navigateTo} />
+      <FinalCtaSection language={language} onNavigate={navigateTo} />
       <FooterSection staticMode language={language} />
       {showSplash && <Splash />}
     </main>
@@ -1309,11 +1405,13 @@ function PrioritySection({ language = "fr" }) {
           </span>
           <span className="priority-title-row priority-title-row-middle">
             <span>{text.priorityWords[2]}</span>
+            {language === "ar" && <span className="priority-ar-word-spacer" aria-hidden="true" />}
+            <span>{text.priorityWords[3]}</span>
           </span>
           <span className="priority-title-row priority-title-row-bottom">
             <img src="/priority-pill-left.png" alt="" />
-            <span>{text.priorityWords[3]}</span>
             <span>{text.priorityWords[4]}</span>
+            <span>{text.priorityWords[5]}</span>
           </span>
         </h2>
         <img className="priority-suit" src="/priority-suit.png" alt="EMS training suit" />
@@ -1324,6 +1422,13 @@ function PrioritySection({ language = "fr" }) {
 
 function AboutVideoSection({ language = "fr" }) {
   const text = pageText[language] || pageText.fr;
+  const scrollToPricing = (event) => {
+    event.preventDefault();
+    window.scrollTo({
+      top: window.innerHeight * (scrollTimeline.pricing.start + 1.12),
+      behavior: "smooth",
+    });
+  };
   return (
     <section className="about-section" aria-label="About Beat Body">
       <div className="about-stage">
@@ -1340,7 +1445,7 @@ function AboutVideoSection({ language = "fr" }) {
         <aside className="about-card">
           <div className="about-card-top">
             <span>{text.aboutPreviewTitle}</span>
-            <a href="#">{text.viewPricing}</a>
+            <a href="#pricing" onClick={scrollToPricing}>{text.viewPricing}</a>
           </div>
           <p>{text.aboutPreviewBody}</p>
         </aside>
@@ -1396,11 +1501,23 @@ const servicesPageItems = [
   },
 ];
 
-function ServiceCard({ service, index, className = "", isActive = false, language = "fr" }) {
+function ServiceCard({ service, index, className = "", isActive = false, language = "fr", onNavigate }) {
   const text = pageText[language] || pageText.fr;
   const localizedService = text.serviceTexts[service.title];
   const serviceTitle = localizedService?.[0] || service.title;
   const serviceBody = localizedService?.[1] || service.text;
+  const handlePricingClick = (event) => {
+    event.preventDefault();
+    window.scrollTo({
+      top: window.innerHeight * (scrollTimeline.pricing.start + 1.12),
+      behavior: "smooth",
+    });
+  };
+  const handleBookingClick = (event) => {
+    event.preventDefault();
+    if (onNavigate) onNavigate("contact");
+    else window.location.hash = "contact";
+  };
   return (
     <article
       className={[
@@ -1418,12 +1535,12 @@ function ServiceCard({ service, index, className = "", isActive = false, languag
       <div className="service-copy service-copy-base">
         <h3>{serviceTitle}</h3>
         <p>{serviceBody}</p>
-        <a href="#">{text.viewPricing}</a>
+        <a href="#pricing" onClick={handlePricingClick}>{text.viewPricing}</a>
       </div>
       <div className="service-copy service-copy-active">
         <h3>{serviceTitle}</h3>
         <p>{serviceBody}</p>
-        <a href="#">{text.bookSession}</a>
+        <a href="#contact" onClick={handleBookingClick}>{text.bookSession}</a>
       </div>
     </article>
   );
@@ -1499,6 +1616,7 @@ function ServicesSection({ onNavigate, items = services, language = "fr" }) {
               index={index}
               isActive={index === activeIndex}
               language={language}
+              onNavigate={onNavigate}
             />
           ))}
         </div>
@@ -1519,6 +1637,53 @@ const pricingPlanNamesFr = {
   Elite: "Elite",
 };
 
+function DashboardAccessPage({ onSuccess, onCancel }) {
+  const [code, setCode] = useState("");
+  const [error, setError] = useState("");
+
+  const submitCode = (event) => {
+    event.preventDefault();
+    if (code === DASHBOARD_ACCESS_CODE) {
+      setError("");
+      onSuccess();
+      return;
+    }
+    setError("Code incorrect");
+    setCode("");
+  };
+
+  return (
+    <main className="dashboard-access-page">
+      <section className="dashboard-access-card" aria-labelledby="dashboard-access-title">
+        <img src="/beat-body-logo.png" alt="Beat Body" />
+        <p className="dashboard-access-kicker">Archive interne</p>
+        <h1 id="dashboard-access-title">Accès réservé</h1>
+        <form onSubmit={submitCode}>
+          <label htmlFor="dashboard-code">Code d’accès</label>
+          <input
+            id="dashboard-code"
+            type="password"
+            inputMode="numeric"
+            autoComplete="off"
+            value={code}
+            onChange={(event) => {
+              setCode(event.target.value.trim());
+              setError("");
+            }}
+            placeholder="••••"
+            autoFocus
+          />
+          {error && <p className="dashboard-access-error">{error}</p>}
+          <button type="submit">Continuer</button>
+        </form>
+        <button type="button" className="dashboard-access-back" onClick={onCancel}>
+          Retour au site
+        </button>
+      </section>
+    </main>
+  );
+}
+
 function DashboardPage({
   plans = pricingPlans,
   setPlans = () => {},
@@ -1532,8 +1697,10 @@ function DashboardPage({
   setServices = () => {},
   featuredTitles = [],
   setFeaturedTitles = () => {},
+  onExit = () => {},
 }) {
   const [dashboardTab, setDashboardTab] = useState("services");
+  const dashboardText = pageText.fr;
   const [hoverTab, setHoverTab] = useState("before");
   const [featuredOnly, setFeaturedOnly] = useState(false);
   const [search, setSearch] = useState("");
@@ -1619,6 +1786,8 @@ function DashboardPage({
   const [selectedDate, setSelectedDate] = useState(null);
   const [newFeatureValue, setNewFeatureValue] = useState("");
   const [newEmailValue, setNewEmailValue] = useState("");
+  const phoneLimitReached = contactPhones.length >= MAX_CONTACT_PHONES;
+  const emailLimitReached = contactEmails.length >= MAX_CONTACT_EMAILS;
 
   const shiftCalendarMonth = (delta) => {
     setCalendarBaseMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + delta, 1));
@@ -1657,15 +1826,15 @@ function DashboardPage({
 
   const addContactFeature = () => {
     const text = newFeatureValue.trim();
-    if (!text) return;
-    setContactPhones((prev) => [...prev, text]);
+    if (!text || phoneLimitReached) return;
+    setContactPhones((prev) => (prev.length >= MAX_CONTACT_PHONES ? prev : [...prev, text]));
     setNewFeatureValue("");
   };
 
   const addContactEmail = () => {
     const text = newEmailValue.trim();
-    if (!text) return;
-    setContactEmails((prev) => [...prev, text]);
+    if (!text || emailLimitReached) return;
+    setContactEmails((prev) => (prev.length >= MAX_CONTACT_EMAILS ? prev : [...prev, text]));
     setNewEmailValue("");
   };
 
@@ -1724,13 +1893,9 @@ function DashboardPage({
             <IdCard size={16} />
             <span>Contact</span>
           </a>
-          <a href="#">
-            <Settings size={16} />
-            <span>Setting</span>
-          </a>
         </nav>
 
-        <button className="dashboard-logout" type="button">
+        <button className="dashboard-logout" type="button" onClick={onExit}>
           <LogOut size={16} />
           <span>Sortie</span>
         </button>
@@ -1859,7 +2024,7 @@ function DashboardPage({
           <div className="dashboard-contact">
             <div className="dashboard-contact-block">
               <div className="dashboard-contact-block-inner">
-              <span className="dashboard-contact-tab">{text.formTab}</span>
+              <span className="dashboard-contact-tab">{dashboardText.formTab}</span>
               <div className="dashboard-contact-card">
                 <div className="dashboard-contact-card-header">
                   <Calendar size={16} />
@@ -1967,7 +2132,7 @@ function DashboardPage({
 
             <div className="dashboard-contact-block">
               <div className="dashboard-contact-block-inner">
-              <span className="dashboard-contact-tab">{text.callTab}</span>
+              <span className="dashboard-contact-tab">{dashboardText.callTab}</span>
               <div className="dashboard-contact-list">
                 {contactPhones.map((phone, index) => (
                   <div className="dashboard-contact-row" key={index}>
@@ -1984,13 +2149,14 @@ function DashboardPage({
                   </div>
                 ))}
 
-                <div className="dashboard-contact-row dashboard-contact-row-add">
+                <div className={phoneLimitReached ? "dashboard-contact-row dashboard-contact-row-add is-disabled" : "dashboard-contact-row dashboard-contact-row-add"}>
                   <span className="dashboard-contact-flag" />
                   <input
                     type="text"
                     className="dashboard-contact-input"
                     placeholder="Ajouter une fonctionnalité"
                     value={newFeatureValue}
+                    disabled={phoneLimitReached}
                     onChange={(event) => setNewFeatureValue(event.target.value)}
                     onKeyDown={(event) => {
                       if (event.key === "Enter") addContactFeature();
@@ -2000,6 +2166,7 @@ function DashboardPage({
                     type="button"
                     className="dashboard-prix-feature-add-icon"
                     aria-label="Ajouter"
+                    disabled={phoneLimitReached}
                     onClick={addContactFeature}
                   >
                     <Plus size={12} />
@@ -2020,12 +2187,13 @@ function DashboardPage({
                   </div>
                 ))}
 
-                <div className="dashboard-contact-row dashboard-contact-row-add">
+                <div className={emailLimitReached ? "dashboard-contact-row dashboard-contact-row-add is-disabled" : "dashboard-contact-row dashboard-contact-row-add"}>
                   <input
                     type="text"
                     className="dashboard-contact-input"
                     placeholder="Ajouter un Email"
                     value={newEmailValue}
+                    disabled={emailLimitReached}
                     onChange={(event) => setNewEmailValue(event.target.value)}
                     onKeyDown={(event) => {
                       if (event.key === "Enter") addContactEmail();
@@ -2035,6 +2203,7 @@ function DashboardPage({
                     type="button"
                     className="dashboard-prix-feature-add-icon"
                     aria-label="Ajouter"
+                    disabled={emailLimitReached}
                     onClick={addContactEmail}
                   >
                     <Plus size={12} />
@@ -2396,6 +2565,10 @@ function JourneySection({ language = "fr" }) {
         <a
           className="journey-book journey-book-link"
           href="#contact"
+          onClick={(event) => {
+            event.preventDefault();
+            window.location.hash = "contact";
+          }}
           style={{
             "--journey-book-top": visibleSteps <= 1 ? 32.5 : 32.5 + (visibleSteps - 1) * 13.5,
           }}
@@ -2521,7 +2694,7 @@ const pricingPlans = [
   },
 ];
 
-function PricingSection({ plans = pricingPlans, language = "fr" }) {
+function PricingSection({ plans = pricingPlans, language = "fr", onNavigate }) {
   const text = pageText[language] || pageText.fr;
   const gridRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(
@@ -2612,7 +2785,15 @@ function PricingSection({ plans = pricingPlans, language = "fr" }) {
               <ul>
                 {planFeatures.map((feature) => <li key={feature}>{feature}</li>)}
               </ul>
-              <button type="button">{text.bookSession}</button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onNavigate) onNavigate("contact");
+                  else window.location.hash = "contact";
+                }}
+              >
+                {text.bookSession}
+              </button>
             </article>
             );
           })}
@@ -2999,7 +3180,7 @@ function AboutExperienceSection({ language = "fr" }) {
   );
 }
 
-function FinalCtaSection({ staticMode = false, language = "fr" }) {
+function FinalCtaSection({ staticMode = false, language = "fr", onNavigate }) {
   const videoRef = useRef(null);
   const text = pageText[language] || pageText.fr;
 
@@ -3067,7 +3248,16 @@ function FinalCtaSection({ staticMode = false, language = "fr" }) {
             <span>{text.ctaTitle2}</span>
           </h2>
           <p>{text.ctaBody}</p>
-          <a href="#">{text.ctaButton}</a>
+          <a
+            href="#contact"
+            onClick={(event) => {
+              event.preventDefault();
+              if (onNavigate) onNavigate("contact");
+              else window.location.hash = "contact";
+            }}
+          >
+            {text.ctaButton}
+          </a>
           <small><span>✓</span> {text.ctaSmall}</small>
         </div>
       </div>
@@ -3119,6 +3309,11 @@ function FooterWatermark() {
 function FooterSection({ staticMode = false, language = "fr" }) {
   const text = pageText[language] || pageText.fr;
   const footerSections = text.footerSections.map(([title, items]) => ({ title, items }));
+  const openDashboardAccess = (event) => {
+    event.preventDefault();
+    window.location.hash = "dashboard";
+    window.scrollTo({ top: 0, behavior: "auto" });
+  };
 
   return (
     <footer className={staticMode ? "footer-section footer-static" : "footer-section"} aria-label="Beat Body footer">
@@ -3157,6 +3352,7 @@ function FooterSection({ staticMode = false, language = "fr" }) {
         </div>
         <div className="footer-bottom">
           <span>{text.rights}</span>
+          <a className="footer-access-link" href="#dashboard" onClick={openDashboardAccess}>Archive</a>
           <a href="mailto:beatbody@gmail.com">beatbody@gmail.com</a>
         </div>
         <FooterWatermark />
@@ -3498,6 +3694,14 @@ function ContactPage({ phones = [], emails = [], blockedDates = new Set(), langu
     setShowModal(false);
   };
 
+  const toTelHref = (phone) => {
+    const trimmed = String(phone).trim();
+    if (trimmed.startsWith("+")) return `tel:${trimmed.replace(/[^\d+]/g, "")}`;
+    return `tel:${trimmed.replace(/\D/g, "")}`;
+  };
+
+  const toMailHref = (email) => `mailto:${String(email).trim()}`;
+
   const features = [
     { icon: Cpu, label: text.contactFeatures[0] },
     { icon: TrendingUp, label: text.contactFeatures[1] },
@@ -3634,14 +3838,14 @@ function ContactPage({ phones = [], emails = [], blockedDates = new Set(), langu
                   <a
                     key={phone}
                     className="contact-call-number"
-                    href={`tel:${phone.replace(/\s+/g, "")}`}
+                    href={toTelHref(phone)}
                   >
                     <Phone size={16} />
                     {phone}
                   </a>
                 ))}
                 {emails.map((email) => (
-                  <a key={email} className="contact-call-number" href={`mailto:${email}`}>
+                  <a key={email} className="contact-call-number" href={toMailHref(email)}>
                     <Mail size={16} />
                     {email}
                   </a>
