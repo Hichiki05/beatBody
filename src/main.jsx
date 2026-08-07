@@ -30,6 +30,7 @@ import {
   CheckCircle2,
   Mail,
 } from "lucide-react";
+import { supabase, SITE_SETTINGS_ID, SUPABASE_ADMIN_EMAIL } from "./supabaseClient";
 import "./styles.css";
 
 const DASHBOARD_SERVICES_STORAGE_KEY = "beat-body-dashboard-services";
@@ -40,7 +41,6 @@ const CONTACT_EMAILS_STORAGE_KEY = "beat-body-contact-emails";
 const CONTACT_SETTINGS_STORAGE_KEY = "beat-body-contact-settings";
 const BLOCKED_DATES_STORAGE_KEY = "beat-body-blocked-dates";
 const DASHBOARD_UNLOCK_STORAGE_KEY = "beat-body-dashboard-unlocked";
-const DASHBOARD_ACCESS_CODE = "0000";
 const MAX_CONTACT_PHONES = 3;
 const MAX_CONTACT_EMAILS = 2;
 const DEFAULT_CONTACT_PHONES = ["+212 645461998"];
@@ -84,6 +84,15 @@ const readStoredLanguage = () => {
   const stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
   return ["fr", "ar", "en"].includes(stored) ? stored : "fr";
 };
+
+const normalizeSiteSettings = (data) => ({
+  services: Array.isArray(data?.services) ? data.services : servicesPageItems,
+  featuredServices: Array.isArray(data?.featuredServices) ? data.featuredServices : [],
+  pricing: Array.isArray(data?.pricing) ? data.pricing : pricingPlans,
+  phones: cleanStringList(data?.phones, MAX_CONTACT_PHONES),
+  emails: cleanStringList(data?.emails, MAX_CONTACT_EMAILS),
+  blockedDates: Array.isArray(data?.blockedDates) ? data.blockedDates : [],
+});
 
 const translations = {
   fr: {
@@ -440,6 +449,60 @@ function App() {
       return Array.isArray(storedFeatured) ? storedFeatured : defaultFeatured;
     },
   );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadSiteSettings = async () => {
+      if (!supabase) return;
+
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("data")
+        .eq("id", SITE_SETTINGS_ID)
+        .single();
+
+      if (cancelled || error || !data?.data) return;
+
+      const settings = normalizeSiteSettings(data.data);
+      setServiceItems(settings.services.length ? settings.services : servicesPageItems);
+      setFeaturedServiceTitles(settings.featuredServices);
+      setPricingPlansData(settings.pricing.length ? settings.pricing : pricingPlans);
+      setContactPhones(settings.phones.length ? settings.phones : DEFAULT_CONTACT_PHONES);
+      setContactEmails(settings.emails);
+      setBlockedDates(new Set(settings.blockedDates));
+    };
+
+    loadSiteSettings();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!supabase) {
+      window.sessionStorage.removeItem(DASHBOARD_UNLOCK_STORAGE_KEY);
+      setDashboardUnlocked(false);
+      return undefined;
+    }
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) {
+        window.sessionStorage.removeItem(DASHBOARD_UNLOCK_STORAGE_KEY);
+        setDashboardUnlocked(false);
+      }
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        window.sessionStorage.removeItem(DASHBOARD_UNLOCK_STORAGE_KEY);
+        setDashboardUnlocked(false);
+      }
+    });
+
+    return () => authListener.subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -834,6 +897,29 @@ function App() {
     window.scrollTo({ top: 0, behavior: "auto" });
   };
 
+  const saveSiteSettings = async () => {
+    const settings = {
+      services: serviceItems,
+      featuredServices: featuredServiceTitles,
+      pricing: pricingPlansData,
+      phones: cleanStringList(contactPhones, MAX_CONTACT_PHONES),
+      emails: cleanStringList(contactEmails, MAX_CONTACT_EMAILS),
+      blockedDates: [...blockedDates],
+    };
+
+    if (!supabase) {
+      return { ok: false, error: "Supabase is not configured in this environment." };
+    }
+
+    const { error } = await supabase
+      .from("site_settings")
+      .update({ data: settings, updated_at: new Date().toISOString() })
+      .eq("id", SITE_SETTINGS_ID);
+
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  };
+
   const unlockDashboard = () => {
     window.sessionStorage.setItem(DASHBOARD_UNLOCK_STORAGE_KEY, "true");
     setDashboardUnlocked(true);
@@ -842,7 +928,10 @@ function App() {
     window.scrollTo({ top: 0, behavior: "auto" });
   };
 
-  const lockDashboard = () => {
+  const lockDashboard = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     window.sessionStorage.removeItem(DASHBOARD_UNLOCK_STORAGE_KEY);
     setDashboardUnlocked(false);
     setPage("home");
@@ -874,6 +963,7 @@ function App() {
         setServices={setServiceItems}
         featuredTitles={featuredServiceTitles}
         setFeaturedTitles={setFeaturedServiceTitles}
+        onSaveSettings={saveSiteSettings}
         onExit={lockDashboard}
       />
     );
@@ -1638,18 +1728,36 @@ const pricingPlanNamesFr = {
 };
 
 function DashboardAccessPage({ onSuccess, onCancel }) {
-  const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const submitCode = (event) => {
+  const submitLogin = async (event) => {
     event.preventDefault();
-    if (code === DASHBOARD_ACCESS_CODE) {
-      setError("");
-      onSuccess();
+    if (!supabase) {
+      setError("Supabase n'est pas configuré.");
       return;
     }
-    setError("Code incorrect");
-    setCode("");
+    if (!SUPABASE_ADMIN_EMAIL) {
+      setError("Email administrateur manquant dans la configuration.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: SUPABASE_ADMIN_EMAIL,
+      password,
+    });
+    setLoading(false);
+
+    if (signInError) {
+      setError("Identifiants incorrects.");
+      setPassword("");
+      return;
+    }
+
+    onSuccess();
   };
 
   return (
@@ -1658,23 +1766,22 @@ function DashboardAccessPage({ onSuccess, onCancel }) {
         <img src="/beat-body-logo.png" alt="Beat Body" />
         <p className="dashboard-access-kicker">Archive interne</p>
         <h1 id="dashboard-access-title">Accès réservé</h1>
-        <form onSubmit={submitCode}>
-          <label htmlFor="dashboard-code">Code d’accès</label>
+        <form onSubmit={submitLogin}>
+          <label htmlFor="dashboard-password">Mot de passe</label>
           <input
-            id="dashboard-code"
+            id="dashboard-password"
             type="password"
-            inputMode="numeric"
-            autoComplete="off"
-            value={code}
+            autoComplete="current-password"
+            value={password}
             onChange={(event) => {
-              setCode(event.target.value.trim());
+              setPassword(event.target.value);
               setError("");
             }}
-            placeholder="••••"
+            placeholder="••••••••"
             autoFocus
           />
           {error && <p className="dashboard-access-error">{error}</p>}
-          <button type="submit">Continuer</button>
+          <button type="submit" disabled={loading}>{loading ? "Connexion..." : "Continuer"}</button>
         </form>
         <button type="button" className="dashboard-access-back" onClick={onCancel}>
           Retour au site
@@ -1697,6 +1804,7 @@ function DashboardPage({
   setServices = () => {},
   featuredTitles = [],
   setFeaturedTitles = () => {},
+  onSaveSettings = async () => ({ ok: true }),
   onExit = () => {},
 }) {
   const [dashboardTab, setDashboardTab] = useState("services");
@@ -1718,10 +1826,28 @@ function DashboardPage({
     });
   };
 
-  const handleImageUpload = (event) => {
+  const handleImageUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
+    let url = URL.createObjectURL(file);
+
+    if (supabase) {
+      const safeName = file.name.replace(/[^a-z0-9.-]/gi, "-").toLowerCase();
+      const filePath = `services/${Date.now()}-${safeName}`;
+      const { error } = await supabase.storage.from("beatbody-images").upload(filePath, file, {
+        cacheControl: "31536000",
+        upsert: false,
+      });
+
+      if (error) {
+        alert(`Impossible d'envoyer l'image: ${error.message}`);
+        return;
+      }
+
+      const { data } = supabase.storage.from("beatbody-images").getPublicUrl(filePath);
+      url = data.publicUrl;
+    }
+
     if (hoverTab === "before") setBeforeImageUrl(url);
     else setAfterImageUrl(url);
   };
@@ -1774,8 +1900,20 @@ function DashboardPage({
   };
 
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaveError("");
+    const result = await onSaveSettings();
+    setIsSaving(false);
+
+    if (result?.ok === false) {
+      setSaveError(result.error || "Impossible d'enregistrer.");
+      return;
+    }
+
     setShowSaveConfirm(true);
   };
 
@@ -1902,8 +2040,9 @@ function DashboardPage({
       </aside>
 
       <div className="dashboard-topbar">
-        <button type="button" className="dashboard-save-button" onClick={handleSave}>
-          Enregistrer
+        {saveError && <p className="dashboard-save-error">{saveError}</p>}
+        <button type="button" className="dashboard-save-button" onClick={handleSave} disabled={isSaving}>
+          {isSaving ? "Enregistrement..." : "Enregistrer"}
         </button>
       </div>
 

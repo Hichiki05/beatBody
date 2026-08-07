@@ -3075,6 +3075,13 @@ a {
   text-align: center;
 }
 
+.dashboard-access-card input[type="email"] {
+  font-size: 16px;
+  letter-spacing: 0;
+  text-align: left;
+  padding: 0 18px;
+}
+
 .dashboard-access-card button {
   min-height: 56px;
   border: none;
@@ -3084,6 +3091,12 @@ a {
   font-size: 15px;
   font-weight: 800;
   cursor: pointer;
+}
+
+.dashboard-access-card button:disabled,
+.dashboard-save-button:disabled {
+  opacity: 0.72;
+  cursor: wait;
 }
 
 .dashboard-access-error {
@@ -6952,6 +6965,13 @@ a {
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(196, 13, 20, 0.3);
+}
+
+.dashboard-save-error {
+  margin: 0;
+  color: #c40d14;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .dashboard-save-overlay {
