@@ -1242,6 +1242,33 @@ a {
   }
 }
 
+@media (max-width: 900px) {
+  .priority-suit {
+    top: clamp(322px, 42svh, 390px) !important;
+    bottom: auto !important;
+    left: 50% !important;
+    width: auto !important;
+    height: min(52svh, calc(100svh - clamp(322px, 42svh, 390px))) !important;
+    max-width: 82vw !important;
+    object-fit: contain !important;
+    transform: translateX(-50%) !important;
+  }
+
+  @media (max-height: 760px) {
+    .priority-suit {
+      top: clamp(286px, 39svh, 330px) !important;
+      height: min(50svh, calc(100svh - clamp(286px, 39svh, 330px))) !important;
+    }
+  }
+
+  @media (max-height: 650px) {
+    .priority-suit {
+      top: clamp(248px, 37svh, 292px) !important;
+      height: min(47svh, calc(100svh - clamp(248px, 37svh, 292px))) !important;
+    }
+  }
+}
+
 .services-page {
   min-height: 100vh;
   overflow-x: hidden;
