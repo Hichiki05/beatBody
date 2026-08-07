@@ -333,8 +333,8 @@ a {
   flex-direction: column;
   padding: 0 0 28px;
   background: rgba(138, 133, 133, 0.68);
-  backdrop-filter: blur(100px);
-  -webkit-backdrop-filter: blur(100px);
+  backdrop-filter: blur(42px);
+  -webkit-backdrop-filter: blur(42px);
   color: #fff;
   animation: mobileMenuPageIn 0.42s cubic-bezier(0.19, 1, 0.22, 1) both;
 }
@@ -346,8 +346,8 @@ a {
   min-height: 74px;
   padding: 14px 18px;
   background: rgba(138, 133, 133, 0.68);
-  backdrop-filter: blur(100px);
-  -webkit-backdrop-filter: blur(100px);
+  backdrop-filter: blur(42px);
+  -webkit-backdrop-filter: blur(42px);
 }
 
 .mobile-menu-header .brand {
@@ -511,14 +511,14 @@ a {
   background:
     radial-gradient(circle at 50% 45%, rgba(105, 0, 0, 0.2), transparent 52%),
     rgba(0, 0, 0, 0.78);
-  backdrop-filter: blur(100px);
-  -webkit-backdrop-filter: blur(100px);
+  backdrop-filter: blur(42px);
+  -webkit-backdrop-filter: blur(42px);
 }
 
 .mobile-menu-overlay-hero .mobile-menu-header {
   background: rgba(18, 18, 18, 0.78);
-  backdrop-filter: blur(100px);
-  -webkit-backdrop-filter: blur(100px);
+  backdrop-filter: blur(42px);
+  -webkit-backdrop-filter: blur(42px);
 }
 
 .mobile-menu-overlay-hero .mobile-menu-close {
@@ -2036,7 +2036,6 @@ a {
   height: 100%;
   border-radius: inherit;
   background: #c20d17;
-  transition: width 0.08s linear;
 }
 
 @media (min-width: 901px) {
@@ -2047,7 +2046,16 @@ a {
 }
 
 .why-tab.is-active i::before {
-  width: calc(var(--load-progress, 0) * 100%);
+  animation: whyProgressFill 3.2s linear forwards;
+}
+
+@keyframes whyProgressFill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
 }
 
 .why-visual {
@@ -2087,9 +2095,9 @@ a {
 
 .why-visual p {
   width: min(96%, calc(54.5vh * 0.86));
-  margin: clamp(14px, 2.4vh, 19px) auto 0;
+  margin: clamp(4px, 0.8vh, 8px) auto 0;
   font-size: clamp(13px, 1.5vw, 17px);
-  line-height: 1.08;
+  line-height: 1.02;
 }
 
 .why-preview {
@@ -2105,6 +2113,12 @@ a {
   transform-origin: 0 50%;
   animation: whyPreviewIn 0.4s ease-out both;
   transform: translateX(calc(var(--why-rest) * 90px));
+}
+
+@media (min-width: 901px) {
+  .why-visual {
+    top: 15.8vh;
+  }
 }
 
 @keyframes whyImageIn {
@@ -2187,16 +2201,16 @@ a {
   display: block;
   width: auto;
   height: 55vh;
-  opacity: 1;
-  visibility: hidden;
-  translate: 0 clamp(120px, 22vh, 240px);
+  opacity: 0;
+  visibility: visible;
+  translate: 0 calc(100svh - 24vh);
   scale: 0.84;
   transform-origin: 45% 55%;
   filter: none;
   transition:
-    translate 0.72s cubic-bezier(0.16, 1, 0.3, 1),
-    scale 0.72s cubic-bezier(0.16, 1, 0.3, 1),
-    visibility 0s linear 0.72s;
+    opacity 0s linear 0.38s,
+    translate 0.38s cubic-bezier(0.55, 0, 0.25, 1),
+    scale 0.38s cubic-bezier(0.55, 0, 0.25, 1);
 }
 
 .journey-card:nth-child(4) {
@@ -2205,13 +2219,12 @@ a {
 
 .journey-card.is-visible {
   opacity: 1;
-  visibility: visible;
   translate: 0 0;
   scale: 1;
   transition:
-    translate 0.72s cubic-bezier(0.16, 1, 0.3, 1),
-    scale 0.72s cubic-bezier(0.16, 1, 0.3, 1),
-    visibility 0s;
+    opacity 0s,
+    translate 0.52s cubic-bezier(0.16, 1, 0.3, 1),
+    scale 0.52s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .journey-book {
@@ -3866,6 +3879,11 @@ a {
     top: 24vh;
     left: 3vw;
     height: 42vh;
+    translate: 0 calc(100svh - 24vh);
+  }
+
+  .journey-card.is-visible {
+    translate: 0 0;
   }
 
   .journey-book {
@@ -4717,6 +4735,15 @@ a {
     width: 170px;
   }
 
+  .about-wordmark {
+    left: 0;
+    right: auto;
+    bottom: 12px;
+    width: 100vw;
+    max-width: none;
+    opacity: calc(0.22 + (var(--about-enter) * 0.42));
+  }
+
   .services-content {
     --services-layout-width: calc(100vw - 24px);
     padding: 76px 12px 18px;
@@ -4990,6 +5017,11 @@ a {
     left: 4vw;
     width: 58vw;
     height: auto;
+    translate: 0 calc(100svh - 39vh);
+  }
+
+  .journey-card.is-visible {
+    translate: 0 0;
   }
 
   .journey-book {
@@ -7864,13 +7896,25 @@ a {
 
 @media (max-width: 900px) {
   .mobile-menu-overlay {
-    backdrop-filter: blur(100px) !important;
-    -webkit-backdrop-filter: blur(100px) !important;
+    background: rgba(16, 14, 14, 0.58) !important;
+    backdrop-filter: blur(42px) !important;
+    -webkit-backdrop-filter: blur(42px) !important;
   }
 
   .mobile-menu-header {
-    backdrop-filter: blur(100px) !important;
-    -webkit-backdrop-filter: blur(100px) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(42px) !important;
+    -webkit-backdrop-filter: blur(42px) !important;
+  }
+
+  .mobile-menu-overlay-hero {
+    background:
+      radial-gradient(circle at 50% 45%, rgba(105, 0, 0, 0.2), transparent 52%),
+      rgba(0, 0, 0, 0.72) !important;
+  }
+
+  .mobile-menu-overlay-hero .mobile-menu-header {
+    background: transparent !important;
   }
 }
 
@@ -7886,6 +7930,12 @@ a {
     overflow: visible !important;
     transform: none !important;
     opacity: 1 !important;
+  }
+
+  .hero > .topbar {
+    background: rgba(16, 16, 17, 0.72) !important;
+    backdrop-filter: blur(18px) !important;
+    -webkit-backdrop-filter: blur(18px) !important;
   }
 
   .hero > .topbar::before,
@@ -7905,6 +7955,16 @@ a {
     width: 56px !important;
     height: 56px !important;
     transform: none !important;
+  }
+
+  .hero > .topbar.mobile-menu-visible {
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .site > .post-topbar.hero-hidden-topbar {
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
 }
 
@@ -7928,5 +7988,32 @@ a {
     overflow-y: auto !important;
     overscroll-behavior-y: auto !important;
     will-change: scroll-position !important;
+  }
+}
+
+@media (max-width: 900px) {
+  section.hero > header.topbar:not(.mobile-menu-visible) {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: rgba(16, 16, 17, 0.72) !important;
+    background-color: rgba(16, 16, 17, 0.72) !important;
+    backdrop-filter: blur(18px) !important;
+    -webkit-backdrop-filter: blur(18px) !important;
+    z-index: 2100 !important;
+  }
+
+  section.hero > header.topbar:not(.mobile-menu-visible)::before {
+    display: none !important;
+    background: transparent !important;
+  }
+
+  .mobile-menu-overlay .mobile-menu-header {
+    background: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .mobile-menu-overlay-hero .mobile-menu-header {
+    background: transparent !important;
   }
 }

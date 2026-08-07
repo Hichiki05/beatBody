@@ -363,9 +363,11 @@ const homeScrollAnchors = [
   scrollTimeline.services.start,
   scrollTimeline.why.start,
   scrollTimeline.journey.start,
-  scrollTimeline.pricing.start,
-  scrollTimeline.cta.start,
-  scrollTimeline.footer.start,
+  scrollTimeline.journey.sequenceEnd,
+  scrollTimeline.performance.start + (scrollTimeline.performance.end - scrollTimeline.performance.start) * 0.86,
+  scrollTimeline.pricing.start + (scrollTimeline.pricing.end - scrollTimeline.pricing.start) * 0.68,
+  scrollTimeline.cta.start + (scrollTimeline.cta.end - scrollTimeline.cta.start) * 0.82,
+  scrollTimeline.footer.end,
 ];
 
 function App() {
@@ -373,6 +375,7 @@ function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [language, setLanguage] = useState(readStoredLanguage);
   const [journeyHeaderActive, setJourneyHeaderActive] = useState(false);
+  const [heroHeaderActive, setHeroHeaderActive] = useState(true);
   const [page, setPage] = useState(
     () => (typeof window !== "undefined" && window.location.hash === "#dashboard" ? "dashboard" : "home"),
   );
@@ -451,10 +454,10 @@ function App() {
       const currentProgress = window.scrollY / viewportHeight;
       return (
         currentProgress >= scrollTimeline.journey.start - 0.02 &&
-        currentProgress < scrollTimeline.performance.start - 0.08
+        currentProgress < scrollTimeline.performance.start - 0.24
       ) || (
         deltaY < 0 &&
-        currentProgress >= scrollTimeline.performance.start - 0.08 &&
+        currentProgress >= scrollTimeline.performance.start - 0.24 &&
         currentProgress <= scrollTimeline.performance.start + 0.35
       );
     };
@@ -465,17 +468,20 @@ function App() {
       const viewportHeight = window.innerHeight || 1;
       const currentProgress = window.scrollY / viewportHeight;
       if (isInsideJourneySequence(direction)) return;
-      const currentIndex = homeScrollAnchors.reduce((closestIndex, anchor, index) => {
-        const closestDistance = Math.abs(homeScrollAnchors[closestIndex] - currentProgress);
-        const distance = Math.abs(anchor - currentProgress);
-        return distance < closestDistance ? index : closestIndex;
-      }, 0);
-      const targetIndex = Math.min(
-        homeScrollAnchors.length - 1,
-        Math.max(0, currentIndex + direction),
-      );
+      const snapOffset = 0.06;
+      let targetIndex = -1;
+      if (direction > 0) {
+        targetIndex = homeScrollAnchors.findIndex((anchor) => anchor > currentProgress + snapOffset);
+      } else {
+        for (let index = homeScrollAnchors.length - 1; index >= 0; index -= 1) {
+          if (homeScrollAnchors[index] < currentProgress - snapOffset) {
+            targetIndex = index;
+            break;
+          }
+        }
+      }
 
-      if (targetIndex === currentIndex) return;
+      if (targetIndex < 0) return;
       isSnapping = true;
       window.scrollTo({
         top: homeScrollAnchors[targetIndex] * viewportHeight,
@@ -619,7 +625,7 @@ function App() {
       document.documentElement.style.setProperty("--performance-tile-2", String(performanceTile2));
       document.documentElement.style.setProperty("--performance-tile-3", String(performanceTile3));
       document.documentElement.style.setProperty("--performance-tile-4", String(performanceTile4));
-      document.documentElement.classList.toggle("performance-scroll-enabled", performanceProgress > 0.995 && pricingProgress < 0.02);
+      document.documentElement.classList.toggle("performance-scroll-enabled", performanceProgress > 0.72 && pricingProgress < 0.02);
       document.documentElement.style.setProperty("--pricing-shift", `${(1 - pricingPanel) * 100}vh`);
       document.documentElement.style.setProperty("--pricing-exit-shift", exitShift(ctaPanel));
       document.documentElement.style.setProperty("--pricing-title", String(pricingTitle));
@@ -634,6 +640,7 @@ function App() {
       document.documentElement.style.setProperty("--footer-shift", `${(1 - footerPanel) * 100}%`);
       document.documentElement.style.setProperty("--footer-copy", "1");
       setJourneyHeaderActive(progress >= scrollTimeline.journey.start);
+      setHeroHeaderActive(progress < scrollTimeline.priority.end);
     };
 
     const requestUpdate = () => {
@@ -741,6 +748,7 @@ function App() {
         language={language}
         onLanguageChange={setLanguage}
         journeyActive={journeyHeaderActive}
+        heroActive={heroHeaderActive}
         onNavigate={navigateTo}
         mobileMenu
         matchHeroStyle
@@ -1071,7 +1079,7 @@ function Hero({ activeIndex = 0, language, onLanguageChange, onNavigate }) {
   );
 }
 
-function PostHeroHeader({ activeIndex = 0, language, onLanguageChange, journeyActive, onNavigate, mobileMenu = false, matchHeroStyle = false }) {
+function PostHeroHeader({ activeIndex = 0, language, onLanguageChange, journeyActive, heroActive = false, onNavigate, mobileMenu = false, matchHeroStyle = false }) {
   const [languageOpen, setLanguageOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const t = translations[language];
@@ -1089,6 +1097,7 @@ function PostHeroHeader({ activeIndex = 0, language, onLanguageChange, journeyAc
         "topbar",
         "post-topbar",
         journeyActive ? "journey-topbar" : "",
+        heroActive ? "hero-hidden-topbar" : "",
         mobileMenu ? "has-mobile-menu" : "",
         matchHeroStyle ? "match-hero-style" : "",
       ].filter(Boolean).join(" ")}
@@ -2137,7 +2146,7 @@ const whyItems = [
   },
 ];
 
-const WHY_STEP_DURATION = 6000;
+const WHY_STEP_DURATION = 3200;
 
 function WhySection({ language = "fr" }) {
   const text = pageText[language] || pageText.fr;
@@ -2147,11 +2156,11 @@ function WhySection({ language = "fr" }) {
     text: text.whyItems[index]?.[1] || item.text,
   }));
   const [active, setActive] = useState(0);
-  const [loadProgress, setLoadProgress] = useState(0);
+  const [progressKey, setProgressKey] = useState(0);
   const [outgoingImage, setOutgoingImage] = useState(null);
   const sectionRef = useRef(null);
   const inViewRef = useRef(false);
-  const startRef = useRef(null);
+  const timerRef = useRef(null);
   const prevImageRef = useRef(whyItems[0].image);
   const current = localizedWhyItems[active];
   const preview = localizedWhyItems[(active + 1) % localizedWhyItems.length];
@@ -2173,9 +2182,11 @@ function WhySection({ language = "fr" }) {
     }
     const observer = new IntersectionObserver(
       ([entry]) => {
+        const wasInView = inViewRef.current;
         inViewRef.current = entry.isIntersecting;
-        if (entry.isIntersecting) {
-          startRef.current = null;
+        if (entry.isIntersecting && !wasInView) {
+          setActive(0);
+          setProgressKey((key) => key + 1);
         }
       },
       { threshold: 0.4 },
@@ -2185,30 +2196,21 @@ function WhySection({ language = "fr" }) {
   }, []);
 
   useEffect(() => {
-    let frameId = window.requestAnimationFrame(function tick(timestamp) {
-      frameId = window.requestAnimationFrame(tick);
-      if (!inViewRef.current) {
-        startRef.current = null;
-        return;
-      }
-      if (startRef.current === null) {
-        startRef.current = timestamp;
-      }
-      const elapsed = timestamp - startRef.current;
-      const progress = Math.min(1, elapsed / WHY_STEP_DURATION);
-      setLoadProgress(progress);
-      if (progress >= 1) {
-        startRef.current = timestamp;
+    window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => {
+      if (inViewRef.current) {
         setActive((currentIndex) => (currentIndex + 1) % whyItems.length);
+        setProgressKey((key) => key + 1);
       }
-    });
-    return () => window.cancelAnimationFrame(frameId);
-  }, []);
+    }, WHY_STEP_DURATION);
+
+    return () => window.clearTimeout(timerRef.current);
+  }, [active, progressKey]);
 
   const handleTabClick = (index) => {
-    startRef.current = null;
-    setLoadProgress(0);
+    window.clearTimeout(timerRef.current);
     setActive(index);
+    setProgressKey((key) => key + 1);
   };
 
   return (
@@ -2227,7 +2229,7 @@ function WhySection({ language = "fr" }) {
             >
               <img src={item.icon} alt="" />
               <span>{item.title}</span>
-              <i style={index === active ? { "--load-progress": loadProgress } : undefined} />
+              <i key={index === active ? `why-progress-${progressKey}-${active}` : undefined} />
             </button>
           ))}
         </div>
