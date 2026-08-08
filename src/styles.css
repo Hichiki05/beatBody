@@ -332,7 +332,7 @@ a {
   display: flex;
   flex-direction: column;
   padding: 0 0 28px;
-  background: rgba(138, 133, 133, 0.68);
+  background: rgba(138, 133, 133, 0.92);
   backdrop-filter: blur(42px);
   -webkit-backdrop-filter: blur(42px);
   color: #fff;
@@ -345,7 +345,7 @@ a {
   justify-content: space-between;
   min-height: 74px;
   padding: 14px 18px;
-  background: rgba(138, 133, 133, 0.68);
+  background: rgba(138, 133, 133, 0.92);
   backdrop-filter: blur(42px);
   -webkit-backdrop-filter: blur(42px);
 }
@@ -510,13 +510,13 @@ a {
 .mobile-menu-overlay-hero {
   background:
     radial-gradient(circle at 50% 45%, rgba(105, 0, 0, 0.2), transparent 52%),
-    rgba(0, 0, 0, 0.78);
+    rgba(0, 0, 0, 0.94);
   backdrop-filter: blur(42px);
   -webkit-backdrop-filter: blur(42px);
 }
 
 .mobile-menu-overlay-hero .mobile-menu-header {
-  background: rgba(18, 18, 18, 0.78);
+  background: rgba(18, 18, 18, 0.94);
   backdrop-filter: blur(42px);
   -webkit-backdrop-filter: blur(42px);
 }
