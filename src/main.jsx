@@ -1731,6 +1731,7 @@ function DashboardAccessPage({ onSuccess, onCancel }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const adminEmail = SUPABASE_ADMIN_EMAIL.trim().toLowerCase();
 
   const submitLogin = async (event) => {
     event.preventDefault();
@@ -1738,21 +1739,22 @@ function DashboardAccessPage({ onSuccess, onCancel }) {
       setError("Supabase n'est pas configuré.");
       return;
     }
-    if (!SUPABASE_ADMIN_EMAIL) {
+    if (!adminEmail) {
       setError("Email administrateur manquant dans la configuration.");
       return;
     }
 
     setLoading(true);
     setError("");
+    await supabase.auth.signOut();
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: SUPABASE_ADMIN_EMAIL,
+      email: adminEmail,
       password,
     });
     setLoading(false);
 
     if (signInError) {
-      setError("Identifiants incorrects.");
+      setError(`Connexion refusée: ${signInError.message}`);
       setPassword("");
       return;
     }
