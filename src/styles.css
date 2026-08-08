@@ -8149,25 +8149,25 @@ a {
 
 @media (max-width: 900px) {
   .mobile-menu-overlay {
-    background: rgba(16, 14, 14, 0.58) !important;
+    background: rgba(138, 133, 133, 0.97) !important;
     backdrop-filter: blur(42px) !important;
     -webkit-backdrop-filter: blur(42px) !important;
   }
 
   .mobile-menu-header {
-    background: rgba(255, 255, 255, 0.08) !important;
+    background: rgba(138, 133, 133, 0.97) !important;
     backdrop-filter: blur(42px) !important;
     -webkit-backdrop-filter: blur(42px) !important;
   }
 
   .mobile-menu-overlay-hero {
     background:
-      radial-gradient(circle at 50% 45%, rgba(105, 0, 0, 0.2), transparent 52%),
-      rgba(0, 0, 0, 0.72) !important;
+      radial-gradient(circle at 50% 45%, rgba(105, 0, 0, 0.22), transparent 52%),
+      rgba(0, 0, 0, 0.985) !important;
   }
 
   .mobile-menu-overlay-hero .mobile-menu-header {
-    background: transparent !important;
+    background: rgba(18, 18, 18, 0.985) !important;
   }
 }
 
@@ -8416,30 +8416,30 @@ a {
 @media (max-width: 900px) {
   .mobile-menu-overlay {
     background:
-      radial-gradient(circle at 50% 42%, rgba(90, 0, 0, 0.12), transparent 56%),
-      rgba(18, 17, 17, 0.62) !important;
-    background-color: rgba(18, 17, 17, 0.62) !important;
+      radial-gradient(circle at 50% 42%, rgba(90, 0, 0, 0.1), transparent 56%),
+      rgba(138, 133, 133, 0.97) !important;
+    background-color: rgba(138, 133, 133, 0.97) !important;
     backdrop-filter: blur(34px) !important;
     -webkit-backdrop-filter: blur(34px) !important;
   }
 
   .mobile-menu-overlay .mobile-menu-header {
-    background: rgba(18, 17, 17, 0.28) !important;
-    background-color: rgba(18, 17, 17, 0.28) !important;
+    background: rgba(138, 133, 133, 0.97) !important;
+    background-color: rgba(138, 133, 133, 0.97) !important;
     backdrop-filter: blur(34px) !important;
     -webkit-backdrop-filter: blur(34px) !important;
   }
 
   .mobile-menu-overlay-hero {
     background:
-      radial-gradient(circle at 50% 45%, rgba(105, 0, 0, 0.2), transparent 52%),
-      rgba(0, 0, 0, 0.72) !important;
-    background-color: rgba(0, 0, 0, 0.72) !important;
+      radial-gradient(circle at 50% 45%, rgba(105, 0, 0, 0.22), transparent 52%),
+      rgba(0, 0, 0, 0.985) !important;
+    background-color: rgba(0, 0, 0, 0.985) !important;
   }
 
   .mobile-menu-overlay-hero .mobile-menu-header {
-    background: rgba(18, 18, 18, 0.24) !important;
-    background-color: rgba(18, 18, 18, 0.24) !important;
+    background: rgba(18, 18, 18, 0.985) !important;
+    background-color: rgba(18, 18, 18, 0.985) !important;
   }
 }
 
@@ -8758,11 +8758,11 @@ a {
   }
 
   .mobile-menu-overlay .mobile-menu-header {
-    background: rgba(255, 255, 255, 0.08) !important;
+    background: rgba(138, 133, 133, 0.97) !important;
   }
 
   .mobile-menu-overlay-hero .mobile-menu-header {
-    background: transparent !important;
+    background: rgba(18, 18, 18, 0.985) !important;
   }
 }
 
