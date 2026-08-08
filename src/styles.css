@@ -509,14 +509,14 @@ a {
 
 .mobile-menu-overlay-hero {
   background:
-    radial-gradient(circle at 50% 45%, rgba(105, 0, 0, 0.2), transparent 52%),
-    rgba(0, 0, 0, 0.94);
+    radial-gradient(circle at 50% 45%, rgba(105, 0, 0, 0.22), transparent 52%),
+    rgba(0, 0, 0, 0.985);
   backdrop-filter: blur(42px);
   -webkit-backdrop-filter: blur(42px);
 }
 
 .mobile-menu-overlay-hero .mobile-menu-header {
-  background: rgba(18, 18, 18, 0.94);
+  background: rgba(18, 18, 18, 0.985);
   backdrop-filter: blur(42px);
   -webkit-backdrop-filter: blur(42px);
 }
