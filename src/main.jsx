@@ -699,8 +699,16 @@ function App() {
       }
 
       if (targetIndex < 0) return;
+      const maxScrollTop = Math.max(
+        0,
+        document.documentElement.scrollHeight - (window.innerHeight || 1),
+      );
+      const targetTop =
+        targetIndex === snapAnchors.length - 1
+          ? maxScrollTop
+          : snapAnchors[targetIndex] * viewportHeight;
       isSnapping = true;
-      const snapDuration = smoothSnapTo(snapAnchors[targetIndex] * viewportHeight);
+      const snapDuration = smoothSnapTo(targetTop);
       window.setTimeout(() => {
         isSnapping = false;
       }, snapDuration + 45);
