@@ -521,6 +521,26 @@ a {
   -webkit-backdrop-filter: blur(42px);
 }
 
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .mobile-menu-overlay {
+    background: rgb(58, 55, 55);
+  }
+
+  .mobile-menu-header {
+    background: rgb(58, 55, 55);
+  }
+
+  .mobile-menu-overlay-hero {
+    background:
+      radial-gradient(circle at 50% 45%, rgba(105, 0, 0, 0.28), transparent 52%),
+      rgb(8, 8, 8);
+  }
+
+  .mobile-menu-overlay-hero .mobile-menu-header {
+    background: rgb(10, 10, 10);
+  }
+}
+
 .mobile-menu-overlay-hero .mobile-menu-close {
   background: rgba(255, 255, 255, 0.14);
 }
