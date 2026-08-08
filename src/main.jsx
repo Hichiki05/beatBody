@@ -581,6 +581,7 @@ function App() {
 
     const easeInOutCubic = (value) =>
       value < 0.5 ? 4 * value * value * value : 1 - Math.pow(-2 * value + 2, 3) / 2;
+    const easeOutCubic = (value) => 1 - Math.pow(1 - value, 3);
 
     const smoothSnapTo = (targetTop) => {
       const startTop = window.scrollY;
@@ -599,13 +600,14 @@ function App() {
         window.cancelAnimationFrame(snapFrame);
       }
 
-      const duration = 1150;
+      const viewportDistance = Math.abs(distance) / Math.max(window.innerHeight || 1, 1);
+      const duration = Math.min(680, Math.max(460, 420 + viewportDistance * 120));
       const startTime = window.performance.now();
 
       const animate = (currentTime) => {
         const elapsed = currentTime - startTime;
         const progress = Math.min(1, elapsed / duration);
-        window.scrollTo(0, startTop + distance * easeInOutCubic(progress));
+        window.scrollTo(0, startTop + distance * easeOutCubic(progress));
 
         if (progress < 1) {
           snapFrame = window.requestAnimationFrame(animate);
@@ -701,7 +703,7 @@ function App() {
       const snapDuration = smoothSnapTo(snapAnchors[targetIndex] * viewportHeight);
       window.setTimeout(() => {
         isSnapping = false;
-      }, snapDuration + 120);
+      }, snapDuration + 45);
     };
 
     const handleWheel = (event) => {
@@ -743,7 +745,7 @@ function App() {
       const touchEndY = event.changedTouches?.[0]?.clientY || touchStartY;
       const deltaY = touchStartY - touchEndY;
       if (performanceTouchConsumed) return;
-      if (Math.abs(deltaY) < 42) return;
+      if (Math.abs(deltaY) < 28) return;
       if (isInsideJourneySequence(deltaY)) return;
       if (canScrollPerformanceContent(event.target, deltaY)) return;
       snapToSection(deltaY > 0 ? 1 : -1);

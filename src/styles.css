@@ -1263,6 +1263,31 @@ a {
 }
 
 @media (max-width: 900px) {
+  .hero,
+  .priority-section,
+  .about-section,
+  .services-section,
+  .why-section,
+  .journey-section,
+  .performance-section,
+  .pricing-section,
+  .final-cta-section,
+  .footer-section {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+
+  .hero-content,
+  .priority-content,
+  .services-content,
+  .why-content,
+  .journey-content,
+  .pricing-content,
+  .footer-content {
+    max-height: 100dvh !important;
+  }
+
   .priority-suit {
     top: clamp(322px, 42svh, 390px) !important;
     bottom: auto !important;
@@ -1286,6 +1311,80 @@ a {
       top: clamp(248px, 37svh, 292px) !important;
       height: min(47svh, calc(100svh - clamp(248px, 37svh, 292px))) !important;
     }
+  }
+}
+
+@media (max-width: 900px) and (max-height: 760px) {
+  .hero {
+    --hero-mobile-scale: 0.9;
+  }
+
+  .mobile-hero-content {
+    transform: scale(var(--hero-mobile-scale)) !important;
+    transform-origin: top center !important;
+  }
+
+  .why-section .why-content {
+    padding-top: clamp(58px, 8dvh, 72px) !important;
+    padding-bottom: clamp(8px, 1.4dvh, 14px) !important;
+    gap: clamp(6px, 1.2dvh, 10px) !important;
+  }
+
+  .why-media {
+    transform: translateY(-2dvh) scale(0.94) !important;
+    transform-origin: top center !important;
+  }
+
+  .performance-content {
+    padding-top: clamp(68px, 9dvh, 82px) !important;
+    padding-bottom: clamp(10px, 1.6dvh, 16px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .performance-content h2 {
+    font-size: clamp(19px, 5.8vw, 25px) !important;
+    line-height: 1.02 !important;
+    margin-bottom: clamp(10px, 1.8dvh, 16px) !important;
+  }
+
+  .final-cta-section {
+    padding-top: clamp(64px, 8dvh, 78px) !important;
+  }
+
+  .final-cta-card {
+    max-height: calc(100dvh - 92px) !important;
+    margin-top: clamp(8px, 1.6dvh, 14px) !important;
+  }
+}
+
+@media (max-width: 900px) and (max-height: 650px) {
+  .hero {
+    --hero-mobile-scale: 0.82;
+  }
+
+  .priority-title,
+  .priority-section-fr .priority-title,
+  .priority-section-ar .priority-title {
+    top: 11.5dvh !important;
+  }
+
+  .services-section .services-content,
+  .pricing-content {
+    padding-top: clamp(58px, 8dvh, 70px) !important;
+    padding-bottom: 8px !important;
+  }
+
+  .pricing-card,
+  .pricing-card.is-featured {
+    height: clamp(250px, 42dvh, 330px) !important;
+    max-height: calc(100dvh - 190px) !important;
+  }
+
+  .pricing-card.is-current,
+  .pricing-card.is-featured.is-current {
+    height: clamp(286px, 49dvh, 380px) !important;
+    max-height: calc(100dvh - 154px) !important;
   }
 }
 
