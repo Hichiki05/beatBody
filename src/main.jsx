@@ -13,6 +13,7 @@ import {
   X,
   Phone,
   Calendar,
+  Flag,
   Menu,
   House,
   Headphones,
@@ -393,11 +394,11 @@ const scrollTimeline = {
   about: { start: 1.4, end: 2.15 },
   services: { start: 2.8, end: 3.54 },
   why: { start: 4.19, end: 4.94 },
-  journey: { start: 5.59, end: 6.34, sequenceStart: 6.34, sequenceEnd: 8.94 },
-  performance: { start: 9.59, end: 10.5 },
-  pricing: { start: 11.15, end: 12.45 },
-  cta: { start: 13.1, end: 14.01 },
-  footer: { start: 14.01, end: 14.66 },
+  journey: { start: 5.59, end: 6.34, sequenceStart: 6.34, sequenceEnd: 10.14 },
+  performance: { start: 10.79, end: 11.7 },
+  pricing: { start: 12.35, end: 13.65 },
+  cta: { start: 14.3, end: 15.21 },
+  footer: { start: 15.21, end: 15.86 },
 };
 
 const homeScrollAnchors = [
@@ -2679,15 +2680,17 @@ function WhySection({ language = "fr" }) {
 }
 
 const journeyCards = [
-  "/journey-step-1.png",
-  "/journey-step-2.png",
-  "/journey-step-3.png",
-  "/journey-step-4.png",
+  { number: "01.", Icon: Calendar, tone: "solid" },
+  { number: "02.", Icon: Flag, tone: "fade" },
+  { number: "03.", Icon: TrendingUp, tone: "solid" },
+  { number: "04.", Icon: Sparkles, tone: "fade" },
 ];
 
 function JourneySection({ language = "fr" }) {
   const text = pageText[language] || pageText.fr;
   const [visibleSteps, setVisibleSteps] = useState(0);
+  const [exitingSteps, setExitingSteps] = useState([]);
+  const previousVisibleStepsRef = useRef(0);
 
   useEffect(() => {
     let frameId = 0;
@@ -2704,7 +2707,23 @@ function JourneySection({ language = "fr" }) {
             (scrollTimeline.journey.sequenceEnd - scrollTimeline.journey.sequenceStart),
         ),
       );
-      setVisibleSteps(sectionReached ? Math.min(4, 1 + Math.floor(sequence * 3.001)) : 0);
+      const sequenceSteps = sequence >= 0.72 ? 3 : sequence >= 0.46 ? 2 : sequence >= 0.2 ? 1 : 0;
+      const nextVisibleSteps = sectionReached ? 1 + sequenceSteps : 0;
+      const previousVisibleSteps = previousVisibleStepsRef.current;
+
+      if (nextVisibleSteps < previousVisibleSteps) {
+        const exiting = [];
+        for (let step = nextVisibleSteps; step < previousVisibleSteps; step += 1) {
+          exiting.push(step);
+        }
+        setExitingSteps((current) => [...new Set([...current, ...exiting])]);
+        window.setTimeout(() => {
+          setExitingSteps((current) => current.filter((step) => !exiting.includes(step)));
+        }, 680);
+      }
+
+      previousVisibleStepsRef.current = nextVisibleSteps;
+      setVisibleSteps(nextVisibleSteps);
     };
     const requestUpdate = () => {
       if (!frameId) frameId = window.requestAnimationFrame(update);
@@ -2724,14 +2743,23 @@ function JourneySection({ language = "fr" }) {
       <div className="journey-overlay">
         <h2 id="journey-title">{text.journeyTitle}</h2>
         <div className="journey-stack">
-          {journeyCards.map((src, index) => (
+          {journeyCards.map(({ number, Icon, tone }, index) => (
             <div
-              className={index < visibleSteps ? "journey-card is-visible" : "journey-card"}
-              key={src}
-              style={{ "--journey-index": index }}
+              className={[
+                "journey-card",
+                index < visibleSteps ? "is-visible" : "",
+                exitingSteps.includes(index) ? "is-exiting" : "",
+              ].filter(Boolean).join(" ")}
+              key={number}
+              style={{
+                "--journey-index": index,
+                "--journey-depth": index < visibleSteps ? index + 1 : 0,
+                "--journey-exit-depth": index + 5,
+              }}
             >
-              <img src={src} alt="" />
+              <span className="journey-card-number">{number}</span>
               <span className="journey-card-title">{text.journeyCards?.[index]}</span>
+              <Icon className={`journey-card-icon journey-card-icon-${tone}`} aria-hidden="true" strokeWidth={1.8} />
             </div>
           ))}
         </div>

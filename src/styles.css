@@ -2343,54 +2343,93 @@ a {
 .journey-card {
   position: absolute;
   top: 24vh;
-  left: 13vw;
-  display: block;
+  left: 14.2vw;
+  display: flex;
+  flex-direction: column;
   width: auto;
-  height: 55vh;
+  height: min(45vh, 405px);
   aspect-ratio: 450 / 544;
+  padding: clamp(20px, 3.2vh, 36px) clamp(20px, 2.2vw, 34px);
+  overflow: hidden;
+  background: #f50905;
+  color: #fff;
   opacity: 0;
+  z-index: var(--journey-depth, 0);
   visibility: visible;
   translate: 0 calc(100svh - 24vh);
   scale: 0.84;
+  rotate: -4deg;
   transform-origin: 45% 55%;
   filter: none;
   transition:
-    opacity 0s linear 0.38s,
-    translate 0.38s cubic-bezier(0.55, 0, 0.25, 1),
-    scale 0.38s cubic-bezier(0.55, 0, 0.25, 1);
+    opacity 0s linear 0.62s,
+    translate 0.62s cubic-bezier(0.55, 0, 0.25, 1),
+    scale 0.62s cubic-bezier(0.55, 0, 0.25, 1);
 }
 
-.journey-card img {
+.journey-card:nth-child(even) {
+  background:
+    radial-gradient(circle at 88% 10%, rgba(255, 255, 255, 0.18), transparent 22%),
+    linear-gradient(135deg, #ff1510 0%, #fa332d 42%, #5d5550 100%);
+}
+
+.journey-card:nth-child(2) {
+  top: 29vh;
+  left: 10.8vw;
+  rotate: -15deg;
+}
+
+.journey-card:nth-child(3) {
+  top: 36vh;
+  left: 9vw;
+  rotate: -17deg;
+}
+
+.journey-card:nth-child(4) {
+  top: 28vh;
+  left: 17.2vw;
+  rotate: 10deg;
+}
+
+.journey-card-number {
+  z-index: 2;
   display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  color: #fff;
+  font-family: "Eurostile Extended", "Eurostile", "Arial Narrow", Arial, sans-serif;
+  font-size: clamp(28px, 2.65vw, 46px);
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
 }
 
 .journey-card-title {
-  position: absolute;
-  left: 10.5%;
-  top: 26%;
+  position: relative;
   z-index: 2;
-  width: 78%;
+  display: block;
+  width: 92%;
+  margin-top: clamp(26px, 4.1vh, 48px);
   color: #fff;
   font-family: "Eurostile Extended", "Eurostile", "Arial Narrow", Arial, sans-serif;
-  font-size: clamp(15px, 1.62vw, 25px);
+  font-size: clamp(17px, 1.32vw, 24px);
   font-weight: 500;
-  line-height: 1.1;
+  line-height: 1.05;
   letter-spacing: 0.01em;
   text-align: left;
-  transform: rotate(-1.5deg);
   text-shadow: 0 0 2px rgba(255, 0, 0, 0.35);
 }
 
-.journey-card-title::before {
-  content: "";
+.journey-card-icon {
   position: absolute;
-  z-index: -1;
-  inset: -0.22em -0.35em -0.2em -0.25em;
-  background: #f50905;
-  border-radius: 0.15em;
+  z-index: 1;
+  left: 25%;
+  bottom: 15%;
+  width: 50%;
+  height: auto;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.journey-card-icon-fade {
+  opacity: 0.9;
 }
 
 html[dir="rtl"] .journey-card-title,
@@ -2399,10 +2438,11 @@ html[dir="rtl"] .journey-card-title,
   direction: rtl;
   font-family: "Arial", "Tahoma", sans-serif;
   font-weight: 700;
+  font-size: clamp(18px, 1.55vw, 28px);
 }
 
-.journey-card:nth-child(4) {
-  left: 18.4vw;
+html[dir="rtl"] .journey-card {
+  direction: rtl;
 }
 
 .journey-card.is-visible {
@@ -2413,6 +2453,11 @@ html[dir="rtl"] .journey-card-title,
     opacity 0s,
     translate 0.52s cubic-bezier(0.16, 1, 0.3, 1),
     scale 0.52s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.journey-card.is-exiting {
+  z-index: var(--journey-exit-depth, 10);
+  opacity: 1;
 }
 
 .journey-book {
@@ -3967,12 +4012,23 @@ html[dir="rtl"] .journey-card-title,
   }
 
   .journey-card {
-    left: 7vw;
-    height: 48vh;
+    left: 12vw;
+    height: min(45vh, 380px);
+  }
+
+  .journey-card:nth-child(2) {
+    top: 27vh;
+    left: 10vw;
+  }
+
+  .journey-card:nth-child(3) {
+    top: 33vh;
+    left: 8.5vw;
   }
 
   .journey-card:nth-child(4) {
-    left: 11vw;
+    top: 27vh;
+    left: 17vw;
   }
 
   .journey-book {
@@ -4196,12 +4252,26 @@ html[dir="rtl"] .journey-card-title,
     font-size: 20px;
   }
 
-  .journey-card,
-  .journey-card:nth-child(4) {
+  .journey-card {
     top: 24vh;
-    left: 3vw;
-    height: 42vh;
+    left: 6vw;
+    height: 37vh;
     translate: 0 calc(100svh - 24vh);
+  }
+
+  .journey-card:nth-child(2) {
+    top: 27vh;
+    left: 4.5vw;
+  }
+
+  .journey-card:nth-child(3) {
+    top: 32vh;
+    left: 3vw;
+  }
+
+  .journey-card:nth-child(4) {
+    top: 27vh;
+    left: 10vw;
   }
 
   .journey-card.is-visible {
@@ -5362,14 +5432,42 @@ html[dir="rtl"] .journey-card-title,
   .journey-card:nth-child(4) {
     top: 39vh;
     left: 4vw;
-    width: 58vw;
+    width: 50vw;
     height: auto;
+    padding: clamp(16px, 4.4vw, 22px);
     translate: 0 calc(100svh - 39vh);
   }
 
+  .journey-card:nth-child(2) {
+    top: 42vh;
+    left: 1vw;
+  }
+
+  .journey-card:nth-child(3) {
+    top: 46vh;
+    left: -1vw;
+  }
+
+  .journey-card:nth-child(4) {
+    top: 41vh;
+    left: 9vw;
+  }
+
+  .journey-card-number {
+    font-size: clamp(24px, 7.8vw, 36px);
+  }
+
   .journey-card-title {
-    font-size: clamp(13px, 4vw, 18px);
+    width: 88%;
+    margin-top: clamp(20px, 6vw, 34px);
+    font-size: clamp(15px, 5vw, 21px);
     line-height: 1.08;
+  }
+
+  .journey-card-icon {
+    left: 22%;
+    bottom: 13%;
+    width: 58%;
   }
 
   .journey-card.is-visible {
