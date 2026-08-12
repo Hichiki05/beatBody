@@ -166,6 +166,7 @@ const pageText = {
       ["Équipement EMS de pointe", "Entraînez-vous avec la dernière génération de technologie EMS conçue pour la performance et l'efficacité."],
     ],
     journeyTitle: "VOTRE PARCOURS COMMENCE ICI",
+    journeyCards: ["Réservez votre consultation", "Créez votre plan", "Récupérez, progressez", "Entraînez-vous, récupérez, progressez"],
     performanceTitle: "ENTRAÎNEZ-VOUS PLUS INTELLIGEMMENT. RÉCUPÉREZ PLUS VITE. PERFORMEZ MIEUX.",
     performanceTiles: ["ACTIVATION COMPLÈTE DU CORPS", "RÉCUPÉRATION PLUS RAPIDE", "TECHNOLOGIE MODERNE", "EXPÉRIENCE PERSONNALISÉE"],
     pricingTitle: "DES PLANS FLEXIBLES POUR CHAQUE PARCOURS",
@@ -213,7 +214,7 @@ const pageText = {
     callNote: "Notre équipe est disponible pour répondre à toutes vos questions.",
     namePlaceholder: "Prénom et Nom *",
     phonePlaceholder: "6XX XXX XXX",
-    emailPlaceholder: "Email*",
+    emailPlaceholder: "Email",
     messagePlaceholder: "Message*",
     reserveButton: "Réserve ma séance",
     datePreferred: "Date préférée",
@@ -250,6 +251,7 @@ const pageText = {
       ["State-of-the-Art EMS Equipment", "Train with the latest generation of EMS technology designed for performance and efficiency."],
     ],
     journeyTitle: "YOUR JOURNEY STARTS HERE",
+    journeyCards: ["Book Your Consultation", "Create Your Plan", "Recover, Progress", "Train, Recover, Improve"],
     performanceTitle: "TRAIN SMARTER. RECOVER FASTER. PERFORM BETTER.",
     performanceTiles: ["FULL BODY ACTIVATION", "FASTER RECOVERY", "MODERN TECHNOLOGY", "PERSONALIZED EXPERIENCE"],
     pricingTitle: "FLEXIBLE PLANS FOR EVERY JOURNEY",
@@ -290,7 +292,7 @@ const pageText = {
     callNote: "Our team is available to answer all your questions.",
     namePlaceholder: "First and Last Name *",
     phonePlaceholder: "6XX XXX XXX",
-    emailPlaceholder: "Email*",
+    emailPlaceholder: "Email",
     messagePlaceholder: "Message*",
     reserveButton: "Book my session",
     datePreferred: "Preferred date",
@@ -316,6 +318,7 @@ const pageText = {
       ["معدات EMS متطورة", "تدرب بأحدث تقنيات EMS المصممة للأداء والكفاءة."],
     ],
     journeyTitle: "رحلتك تبدأ هنا",
+    journeyCards: ["احجز استشارتك", "أنشئ خطتك", "تعافَ وتقدّم", "تدرّب، تعافَ، تحسّن"],
     performanceTitle: "تدرب بذكاء. تعافَ أسرع. أدِّ أفضل.",
     performanceTiles: ["تنشيط كامل للجسم", "تعافٍ أسرع", "تكنولوجيا حديثة", "تجربة شخصية"],
     pricingTitle: "خطط مرنة لكل رحلة",
@@ -363,7 +366,7 @@ const pageText = {
     callNote: "فريقنا متاح للإجابة عن جميع أسئلتك.",
     namePlaceholder: "الاسم الكامل *",
     phonePlaceholder: "6XX XXX XXX",
-    emailPlaceholder: "البريد الإلكتروني*",
+    emailPlaceholder: "البريد الإلكتروني",
     messagePlaceholder: "الرسالة*",
     reserveButton: "احجز جلستي",
     datePreferred: "التاريخ المفضل",
@@ -405,7 +408,7 @@ const homeScrollAnchors = [
   scrollTimeline.journey.start,
   scrollTimeline.journey.sequenceEnd,
   scrollTimeline.performance.start + (scrollTimeline.performance.end - scrollTimeline.performance.start) * 0.86,
-  scrollTimeline.pricing.start + (scrollTimeline.pricing.end - scrollTimeline.pricing.start) * 0.68,
+  scrollTimeline.pricing.start + (scrollTimeline.pricing.end - scrollTimeline.pricing.start) * 0.3,
   scrollTimeline.cta.start + (scrollTimeline.cta.end - scrollTimeline.cta.start) * 0.82,
   scrollTimeline.footer.end,
 ];
@@ -416,9 +419,8 @@ function App() {
   const [language, setLanguage] = useState(readStoredLanguage);
   const [journeyHeaderActive, setJourneyHeaderActive] = useState(false);
   const [heroHeaderActive, setHeroHeaderActive] = useState(true);
-  const [dashboardUnlocked, setDashboardUnlocked] = useState(
-    () => typeof window !== "undefined" && window.sessionStorage.getItem(DASHBOARD_UNLOCK_STORAGE_KEY) === "true",
-  );
+  const [dashboardUnlocked, setDashboardUnlocked] = useState(false);
+  const [dashboardAuthChecked, setDashboardAuthChecked] = useState(false);
   const [page, setPage] = useState(
     () => (typeof window !== "undefined" && window.location.hash === "#dashboard" ? "dashboard" : "home"),
   );
@@ -484,21 +486,31 @@ function App() {
     if (!supabase) {
       window.sessionStorage.removeItem(DASHBOARD_UNLOCK_STORAGE_KEY);
       setDashboardUnlocked(false);
+      setDashboardAuthChecked(true);
       return undefined;
     }
 
     supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
+      const hasSession = Boolean(data.session);
+      if (hasSession) {
+        window.sessionStorage.setItem(DASHBOARD_UNLOCK_STORAGE_KEY, "true");
+        setDashboardUnlocked(true);
+      } else {
         window.sessionStorage.removeItem(DASHBOARD_UNLOCK_STORAGE_KEY);
         setDashboardUnlocked(false);
       }
+      setDashboardAuthChecked(true);
     });
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
+      if (session) {
+        window.sessionStorage.setItem(DASHBOARD_UNLOCK_STORAGE_KEY, "true");
+        setDashboardUnlocked(true);
+      } else {
         window.sessionStorage.removeItem(DASHBOARD_UNLOCK_STORAGE_KEY);
         setDashboardUnlocked(false);
       }
+      setDashboardAuthChecked(true);
     });
 
     return () => authListener.subscription.unsubscribe();
@@ -681,7 +693,7 @@ function App() {
       const snapAnchors = isMobileViewport
         ? [
             ...homeScrollAnchors.slice(0, -1),
-            scrollTimeline.footer.start + (scrollTimeline.footer.end - scrollTimeline.footer.start) * 0.82,
+            scrollTimeline.footer.start + (scrollTimeline.footer.end - scrollTimeline.footer.start) * 0.18,
           ]
         : homeScrollAnchors;
       if (isInsideJourneySequence(direction)) return;
@@ -699,14 +711,7 @@ function App() {
       }
 
       if (targetIndex < 0) return;
-      const maxScrollTop = Math.max(
-        0,
-        document.documentElement.scrollHeight - (window.innerHeight || 1),
-      );
-      const targetTop =
-        targetIndex === snapAnchors.length - 1
-          ? maxScrollTop
-          : snapAnchors[targetIndex] * viewportHeight;
+      const targetTop = snapAnchors[targetIndex] * viewportHeight;
       isSnapping = true;
       const snapDuration = smoothSnapTo(targetTop);
       window.setTimeout(() => {
@@ -716,14 +721,10 @@ function App() {
 
     const handleWheel = (event) => {
       if (Math.abs(event.deltaY) < 18) return;
-      if (isInsideJourneySequence(event.deltaY)) return;
       if (consumePerformanceScroll(event.deltaY)) {
         event.preventDefault();
         return;
       }
-      if (canScrollPerformanceContent(event.target, event.deltaY)) return;
-      event.preventDefault();
-      snapToSection(event.deltaY > 0 ? 1 : -1);
     };
 
     const handleTouchStart = (event) => {
@@ -737,15 +738,12 @@ function App() {
       const deltaY = lastTouchY - currentY;
       const totalDeltaY = touchStartY - currentY;
       if (Math.abs(totalDeltaY) < 8) return;
-      if (isInsideJourneySequence(totalDeltaY)) return;
       if (consumePerformanceScroll(deltaY)) {
         performanceTouchConsumed = true;
         lastTouchY = currentY;
         event.preventDefault();
         return;
       }
-      if (canScrollPerformanceContent(event.target, totalDeltaY)) return;
-      event.preventDefault();
       lastTouchY = currentY;
     };
 
@@ -754,9 +752,6 @@ function App() {
       const deltaY = touchStartY - touchEndY;
       if (performanceTouchConsumed) return;
       if (Math.abs(deltaY) < 28) return;
-      if (isInsideJourneySequence(deltaY)) return;
-      if (canScrollPerformanceContent(event.target, deltaY)) return;
-      snapToSection(deltaY > 0 ? 1 : -1);
     };
 
     window.addEventListener("wheel", handleWheel, { passive: false });
@@ -956,7 +951,7 @@ function App() {
     .slice(0, 3);
 
   if (page === "dashboard") {
-    if (!dashboardUnlocked) {
+    if (!dashboardAuthChecked || !dashboardUnlocked) {
       return <DashboardAccessPage onSuccess={unlockDashboard} onCancel={() => navigateTo("home")} />;
     }
 
@@ -2700,6 +2695,7 @@ function JourneySection({ language = "fr" }) {
       frameId = 0;
       const viewportHeight = window.innerHeight || 1;
       const progress = window.scrollY / viewportHeight;
+      const sectionReached = progress >= scrollTimeline.journey.start - 0.04;
       const sequence = Math.min(
         1,
         Math.max(
@@ -2708,7 +2704,7 @@ function JourneySection({ language = "fr" }) {
             (scrollTimeline.journey.sequenceEnd - scrollTimeline.journey.sequenceStart),
         ),
       );
-      setVisibleSteps(Math.min(4, Math.floor(sequence * 4.001)));
+      setVisibleSteps(sectionReached ? Math.min(4, 1 + Math.floor(sequence * 3.001)) : 0);
     };
     const requestUpdate = () => {
       if (!frameId) frameId = window.requestAnimationFrame(update);
@@ -2729,13 +2725,14 @@ function JourneySection({ language = "fr" }) {
         <h2 id="journey-title">{text.journeyTitle}</h2>
         <div className="journey-stack">
           {journeyCards.map((src, index) => (
-            <img
+            <div
               className={index < visibleSteps ? "journey-card is-visible" : "journey-card"}
               key={src}
-              src={src}
-              alt=""
               style={{ "--journey-index": index }}
-            />
+            >
+              <img src={src} alt="" />
+              <span className="journey-card-title">{text.journeyCards?.[index]}</span>
+            </div>
           ))}
         </div>
         <a
@@ -2942,8 +2939,8 @@ function PricingSection({ plans = pricingPlans, language = "fr", onNavigate }) {
           {plans.map((plan, index) => {
             const localizedPlan = text.pricingPlans[plan.name];
             const planName = localizedPlan?.[0] || plan.name;
-            const planDescription = localizedPlan?.[1] || plan.description;
-            const planFeatures = localizedPlan?.[2] || plan.features;
+            const planDescription = plan.description || localizedPlan?.[1] || "";
+            const planFeatures = plan.features?.length ? plan.features : localizedPlan?.[2] || [];
             return (
             <article
               className={[
@@ -3862,7 +3859,7 @@ function ContactPage({ phones = [], emails = [], blockedDates = new Set(), langu
       "",
       `Nom: ${formData.name}`,
       `Telephone: +212 ${formData.phone}`,
-      `Email: ${formData.email}`,
+      ...(formData.email ? [`Email: ${formData.email}`] : []),
       `Date preferee: ${formatSelectedDate(selectedDate)}`,
       `Message: ${formData.message}`,
     ].join("\n");
@@ -3983,7 +3980,7 @@ function ContactPage({ phones = [], emails = [], blockedDates = new Set(), langu
                     }}
                   />
                 </div>
-                <input type="email" placeholder={text.emailPlaceholder} required />
+                <input type="email" placeholder={text.emailPlaceholder} />
                 <textarea placeholder={text.messagePlaceholder} required />
                 <button type="submit" className="contact-submit">
                   {text.reserveButton}
