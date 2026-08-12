@@ -907,7 +907,7 @@ function App() {
     window.scrollTo({ top: 0, behavior: "auto" });
   };
 
-  const saveSiteSettings = async () => {
+  const saveSiteSettings = async (overrides = {}) => {
     const settings = {
       services: serviceItems,
       featuredServices: featuredServiceTitles,
@@ -915,6 +915,7 @@ function App() {
       phones: cleanStringList(contactPhones, MAX_CONTACT_PHONES),
       emails: cleanStringList(contactEmails, MAX_CONTACT_EMAILS),
       blockedDates: [...blockedDates],
+      ...overrides,
     };
 
     if (!supabase) {
@@ -1829,9 +1830,19 @@ function DashboardPage({
   const [beforeImageUrl, setBeforeImageUrl] = useState("");
   const [afterImageUrl, setAfterImageUrl] = useState("");
   const [newFeatureInputs, setNewFeatureInputs] = useState({});
+  const [draftServices, setDraftServices] = useState(() => serviceList);
+  const [draftFeaturedTitles, setDraftFeaturedTitles] = useState(() => featuredTitles);
+
+  useEffect(() => {
+    setDraftServices(serviceList);
+  }, [serviceList]);
+
+  useEffect(() => {
+    setDraftFeaturedTitles(featuredTitles);
+  }, [featuredTitles]);
 
   const toggleFeatured = (title) => {
-    setFeaturedTitles((prev) => {
+    setDraftFeaturedTitles((prev) => {
       if (prev.includes(title)) return prev.filter((t) => t !== title);
       if (prev.length >= 3) return prev;
       return [...prev, title];
@@ -1868,7 +1879,7 @@ function DashboardPage({
 
   const handleSaveService = () => {
     if (!canSaveService) return;
-    setServices((prev) => [
+    setDraftServices((prev) => [
       ...prev,
       {
         title: serviceTitle.trim(),
@@ -1881,12 +1892,11 @@ function DashboardPage({
     setDescription("");
     setBeforeImageUrl("");
     setAfterImageUrl("");
-    setShowSaveConfirm(true);
   };
 
   const removeService = (title) => {
-    setServices((prev) => prev.filter((service) => service.title !== title));
-    setFeaturedTitles((prev) => prev.filter((featuredTitle) => featuredTitle !== title));
+    setDraftServices((prev) => prev.filter((service) => service.title !== title));
+    setDraftFeaturedTitles((prev) => prev.filter((featuredTitle) => featuredTitle !== title));
   };
 
   const updatePlan = (planName, updater) => {
@@ -1918,7 +1928,22 @@ function DashboardPage({
   const handleSave = async () => {
     setIsSaving(true);
     setSaveError("");
-    const result = await onSaveSettings();
+    const serviceOverrides =
+      dashboardTab === "services"
+        ? {
+            services: draftServices,
+            featuredServices: draftFeaturedTitles.filter((title) =>
+              draftServices.some((service) => service.title === title),
+            ),
+          }
+        : {};
+
+    if (dashboardTab === "services") {
+      setServices(serviceOverrides.services);
+      setFeaturedTitles(serviceOverrides.featuredServices);
+    }
+
+    const result = await onSaveSettings(serviceOverrides);
     setIsSaving(false);
 
     if (result?.ok === false) {
@@ -1996,8 +2021,8 @@ function DashboardPage({
     setContactEmails((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const visibleServices = serviceList.filter((service) => {
-    if (featuredOnly && !featuredTitles.includes(service.title)) return false;
+  const visibleServices = draftServices.filter((service) => {
+    if (featuredOnly && !draftFeaturedTitles.includes(service.title)) return false;
     if (search && !service.title.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -2472,13 +2497,13 @@ function DashboardPage({
             <div className="dashboard-service-card-wrap" key={service.title}>
               <button
                 type="button"
-                className={featuredTitles.includes(service.title) ? "dashboard-favorite is-active" : "dashboard-favorite"}
+                className={draftFeaturedTitles.includes(service.title) ? "dashboard-favorite is-active" : "dashboard-favorite"}
                 aria-label="Toggle featured"
                 onClick={() => toggleFeatured(service.title)}
               >
-                {featuredTitles.includes(service.title) && (
+                {draftFeaturedTitles.includes(service.title) && (
                   <span className="dashboard-favorite-count">
-                    {featuredTitles.indexOf(service.title) + 1}
+                    {draftFeaturedTitles.indexOf(service.title) + 1}
                   </span>
                 )}
                 <Heart size={14} />
