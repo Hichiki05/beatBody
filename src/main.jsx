@@ -690,11 +690,13 @@ function App() {
 
     let isSnapping = false;
     let touchStartY = 0;
+    let touchStartX = 0;
     let lastTouchY = 0;
     let touchStartProgress = 0;
     let journeyTouchActive = false;
     let journeyGestureSnapped = false;
     let performanceTouchActive = false;
+    let servicesTouchActive = false;
     let performanceTouchConsumed = false;
     let performanceBoundarySnapped = false;
     let snapFrame = 0;
@@ -872,7 +874,9 @@ function App() {
     };
 
     const handleTouchStart = (event) => {
-      touchStartY = event.touches?.[0]?.clientY || 0;
+      const touch = event.touches?.[0];
+      touchStartY = touch?.clientY || 0;
+      touchStartX = touch?.clientX || 0;
       lastTouchY = touchStartY;
       touchStartProgress = window.scrollY / (window.innerHeight || 1);
       journeyTouchActive =
@@ -883,14 +887,24 @@ function App() {
       performanceTouchActive =
         window.matchMedia("(max-width: 900px)").matches &&
         Boolean(event.target?.closest?.(".performance-content"));
+      servicesTouchActive =
+        window.matchMedia("(max-width: 900px)").matches &&
+        Boolean(event.target?.closest?.(".services-grid"));
       performanceTouchConsumed = false;
       performanceBoundarySnapped = false;
     };
 
     const handleTouchMove = (event) => {
-      const currentY = event.touches?.[0]?.clientY || touchStartY;
+      const touch = event.touches?.[0];
+      const currentY = touch?.clientY || touchStartY;
+      const currentX = touch?.clientX || touchStartX;
       const deltaY = lastTouchY - currentY;
       const totalDeltaY = touchStartY - currentY;
+      const totalDeltaX = touchStartX - currentX;
+      if (servicesTouchActive || Math.abs(totalDeltaX) > Math.abs(totalDeltaY) * 1.2) {
+        lastTouchY = currentY;
+        return;
+      }
       if (journeyTouchActive) {
         event.preventDefault();
         if (!journeyGestureSnapped && Math.abs(totalDeltaY) >= 28) {
@@ -935,14 +949,23 @@ function App() {
     };
 
     const handleTouchEnd = (event) => {
-      const touchEndY = event.changedTouches?.[0]?.clientY || touchStartY;
+      const touch = event.changedTouches?.[0];
+      const touchEndY = touch?.clientY || touchStartY;
+      const touchEndX = touch?.clientX || touchStartX;
       const deltaY = touchStartY - touchEndY;
+      const deltaX = touchStartX - touchEndX;
+      if (servicesTouchActive || Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
+        servicesTouchActive = false;
+        return;
+      }
       if (performanceTouchActive) {
         performanceTouchActive = false;
+        servicesTouchActive = false;
         return;
       }
       if (journeyTouchActive) {
         journeyTouchActive = false;
+        servicesTouchActive = false;
         if (!journeyGestureSnapped && Math.abs(deltaY) >= 28) {
           snapMobileJourneyStep(deltaY, touchStartProgress);
         }
@@ -954,6 +977,7 @@ function App() {
       if (window.matchMedia("(max-width: 900px)").matches) {
         snapToSection(deltaY);
       }
+      servicesTouchActive = false;
     };
 
     window.addEventListener("wheel", handleWheel, { passive: false });
