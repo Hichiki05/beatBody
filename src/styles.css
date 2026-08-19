@@ -63,6 +63,7 @@ body,
   width: 100%;
   min-height: 100%;
   margin: 0;
+  overscroll-behavior-y: none;
 }
 
 body {
@@ -80,9 +81,12 @@ a {
 .site {
   position: relative;
   width: 100vw;
-  min-height: 1566svh;
+  min-height: 1686svh;
+  min-height: 1686dvh;
   min-width: 320px;
   overflow-x: hidden;
+  overscroll-behavior-y: none;
+  touch-action: pan-y;
   background: #fbf7f7;
 }
 
@@ -114,7 +118,7 @@ a {
   position: absolute;
   inset: 0;
   z-index: -4;
-  background-image: url("/studio-background.png");
+  background-image: url("/studio-background.webp");
   background-position: center;
   background-size: 100% 100%;
   background-repeat: no-repeat;
@@ -1210,6 +1214,7 @@ a {
 }
 
 .service-copy-base a {
+  pointer-events: auto;
   border: 1px solid rgba(87, 18, 18, 0.14);
   color: #151515;
   background: rgba(255, 255, 255, 0.76);
@@ -1230,6 +1235,7 @@ a {
 }
 
 .service-copy-active a {
+  pointer-events: auto;
   border: 1px solid transparent;
   color: #fff;
   background: #c70d14;
@@ -2297,7 +2303,7 @@ a {
   height: calc(100svh + 2px);
   min-height: calc(100vh + 2px);
   overflow: hidden;
-  background: #1b2618 url("/journey-background.png") center / cover no-repeat;
+  background: #1b2618 url("/journey-background.webp") center / cover no-repeat;
   color: #fff;
   transform: translateY(calc(var(--journey-shift) + var(--journey-exit-shift))) scale(var(--journey-exit-scale));
   transform-origin: 50% 18%;
@@ -2918,14 +2924,14 @@ html[dir="rtl"] .journey-card {
   border-radius: 50%;
   background:
     linear-gradient(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.08)),
-    url("/why-equipment.png") center / cover;
+    url("/why-equipment.webp") center / cover;
 }
 
 .badge-avatars span + span {
   margin-left: -9px;
   background-image:
     linear-gradient(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.08)),
-    url("/why-programs.png");
+    url("/why-programs.webp");
 }
 
 .final-cta-content h2 {
@@ -3078,8 +3084,8 @@ html[dir="rtl"] .journey-card {
 
 .footer-main {
   display: grid;
-  grid-template-columns: minmax(230px, 1.15fr) repeat(4, minmax(104px, 0.74fr)) 70px;
-  gap: clamp(24px, 3.2vw, 48px);
+  grid-template-columns: minmax(455px, 0.82fr) repeat(4, minmax(120px, 0.74fr));
+  gap: clamp(20px, 2.2vw, 34px);
   margin-top: clamp(18px, 2.4vh, 26px);
   align-items: start;
 }
@@ -3828,7 +3834,8 @@ html[dir="rtl"] .journey-card {
   }
 
   .site {
-    min-height: 1566svh;
+    min-height: 1686svh;
+    min-height: 1686dvh;
   }
 
   .topbar {
@@ -4728,8 +4735,12 @@ html[dir="rtl"] .journey-card {
   }
 
   .footer-main {
-    grid-template-columns: 1.15fr repeat(2, minmax(112px, 1fr)) 62px;
+    grid-template-columns: repeat(3, minmax(112px, 1fr));
     gap: 18px 28px;
+  }
+
+  .footer-social {
+    grid-column: 1 / -1;
   }
 
   .footer-column:nth-of-type(4),
@@ -5431,8 +5442,8 @@ html[dir="rtl"] .journey-card {
   .journey-card,
   .journey-card:nth-child(4) {
     top: 39vh;
-    left: 4vw;
-    width: 50vw;
+    left: 13vw;
+    width: 44vw;
     height: auto;
     padding: clamp(16px, 4.4vw, 22px);
     translate: 0 calc(100svh - 39vh);
@@ -5440,17 +5451,17 @@ html[dir="rtl"] .journey-card {
 
   .journey-card:nth-child(2) {
     top: 42vh;
-    left: 1vw;
+    left: 10vw;
   }
 
   .journey-card:nth-child(3) {
     top: 46vh;
-    left: -1vw;
+    left: 8vw;
   }
 
   .journey-card:nth-child(4) {
     top: 41vh;
-    left: 9vw;
+    left: 18vw;
   }
 
   .journey-card-number {
@@ -5460,14 +5471,15 @@ html[dir="rtl"] .journey-card {
   .journey-card-title {
     width: 88%;
     margin-top: clamp(20px, 6vw, 34px);
-    font-size: clamp(15px, 5vw, 21px);
+    font-size: clamp(14px, 4.4vw, 19px);
     line-height: 1.08;
   }
 
   .journey-card-icon {
-    left: 22%;
-    bottom: 13%;
-    width: 58%;
+    left: 36%;
+    bottom: 10%;
+    width: 34%;
+    opacity: 0.9;
   }
 
   .journey-card.is-visible {
@@ -5777,6 +5789,10 @@ html[dir="rtl"] .journey-card {
 
   .footer-section.footer-static {
     padding-bottom: 0;
+  }
+
+  .site .footer-section.footer-static {
+    z-index: 16;
   }
 
   .footer-brand-row,
@@ -6961,7 +6977,7 @@ html[dir="rtl"] .journey-card {
   .hero-bg {
     left: -12vw;
     right: -12vw;
-    background-image: url("/mobile-home-background.png");
+    background-image: url("/mobile-home-background.webp");
     background-position: center center;
     background-size: auto 100%;
     background-repeat: no-repeat;
@@ -8973,23 +8989,13 @@ html[dir="rtl"] .journey-card {
 
 @media (max-width: 900px) {
   .performance-section {
-    pointer-events: none !important;
-  }
-
-  .performance-scroll-enabled .performance-section {
     pointer-events: auto !important;
   }
 
   .performance-content {
-    overflow-y: hidden !important;
-    overscroll-behavior-y: contain !important;
-    -webkit-overflow-scrolling: auto !important;
-    will-change: transform !important;
-  }
-
-  .performance-scroll-enabled .performance-content {
     overflow-y: auto !important;
     overscroll-behavior-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
     will-change: scroll-position !important;
   }
 }

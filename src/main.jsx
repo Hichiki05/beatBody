@@ -65,6 +65,9 @@ const cleanStringList = (items, maxItems) => {
     .slice(0, maxItems);
 };
 
+const escapeAttributeSelectorValue = (value) =>
+  String(value ?? "").replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+
 const readStoredContactSettings = () => {
   const storedSettings = readStoredJson(CONTACT_SETTINGS_STORAGE_KEY, null);
   const storedPhones = cleanStringList(storedSettings?.phones, MAX_CONTACT_PHONES);
@@ -86,8 +89,20 @@ const readStoredLanguage = () => {
   return ["fr", "ar", "en"].includes(stored) ? stored : "fr";
 };
 
+const fixLegacyImagePath = (path) =>
+  typeof path === "string" ? path.replace(/\.png$/i, ".webp") : path;
+
+const fixLegacyServiceImages = (list) =>
+  Array.isArray(list)
+    ? list.map((service) => ({
+        ...service,
+        base: fixLegacyImagePath(service?.base),
+        active: fixLegacyImagePath(service?.active),
+      }))
+    : list;
+
 const normalizeSiteSettings = (data) => ({
-  services: Array.isArray(data?.services) ? data.services : servicesPageItems,
+  services: fixLegacyServiceImages(Array.isArray(data?.services) ? data.services : servicesPageItems),
   featuredServices: Array.isArray(data?.featuredServices) ? data.featuredServices : [],
   pricing: Array.isArray(data?.pricing) ? data.pricing : pricingPlans,
   phones: cleanStringList(data?.phones, MAX_CONTACT_PHONES),
@@ -102,13 +117,13 @@ const translations = {
     flag: "\u{1F1EB}\u{1F1F7}",
     dir: "ltr",
     nav: ["Accueil", "Services", "À propos", "Contact"],
-    session: "Réserver votre séance",
+    session: "Réservez votre séance",
     intro:
       "Transformez votre corps plus vite avec une technologie EMS avancée. Là où la performance rencontre la récupération.",
     infoTitle: "Là où la performance rencontre la récupération.",
     infoBody:
       "Combinez la technologie EMS, un coaching expert et des solutions de récupération pour libérer tout votre potentiel physique.",
-    pricing: "Voir les tarifs",
+    pricing: "Consulter les tarifs",
     proof:
       "L'une des destinations pionnières du Maroc combinant technologie EMS, récupération sportive et optimisation des performances sous un même toit.",
     proofShort: "L'une des destinations pionnières du Maroc",
@@ -157,12 +172,12 @@ const pageText = {
     aboutPreviewTitle: "À PROPOS DE BEAT BODY",
     aboutPreviewBody: "Beat Body combine la technologie EMS avancée, les solutions de récupération sportive et le coaching personnalisé pour vous aider à atteindre vos objectifs plus vite, plus intelligemment et en moins de temps que les méthodes d'entraînement traditionnelles.",
     allServices: "TOUS LES SERVICES",
-    viewPricing: "Voir les tarifs",
-    bookSession: "Réserver votre séance",
+    viewPricing: "Consulter les tarifs",
+    bookSession: "Réservez votre séance",
     whyTitle: "POURQUOI BEAT BODY",
     whyItems: [
       ["Programmes adaptés à chaque objectif", "Que votre objectif soit la perte de poids, le gain musculaire, la rééducation ou l'amélioration de la performance."],
-      ["Coachs et spécialistes experts", "Bénéficiez de conseils de professionnels qualifiés spécialisés en performance et récupération."],
+      ["Coachs et spécialistes qualifiés", "Bénéficiez de conseils de professionnels qualifiés spécialisés dans la performance et la récupération."],
       ["Une expérience complète de récupération", "La récupération n'est pas une option - elle fait partie du processus."],
       ["Équipement EMS de pointe", "Entraînez-vous avec la dernière génération de technologie EMS conçue pour la performance et l'efficacité."],
     ],
@@ -177,18 +192,18 @@ const pageText = {
     ctaTitle2: "le futur du fitness ?",
     ctaBody: "Rejoignez Beat Body et découvrez une façon plus intelligente de vous entraîner, récupérer et performer.",
     ctaButton: "Réserver votre première séance",
-    ctaSmall: "Moins de temps. Meilleure récupération. Résultats plus forts.",
+    ctaSmall: "Moins de temps. Meilleure récupération. Des résultats plus visibles.",
     footerTagline: "Technologie avancée. Accompagnement expert. Résultats exceptionnels.",
     followUs: "Suivez-nous",
     footerSections: [
-      ["Accueil", ["Hero", "Pourquoi Beat Body", "Parcours"]],
-      ["Services", ["EMS Training", "Récupération", "Technologie"]],
+      ["Accueil", ["Accueil", "Pourquoi Beat Body", "Parcours"]],
+      ["Services", ["Entraînement EMS", "Récupération", "Technologie"]],
       ["À propos", ["À propos de Beat Body", "Notre priorité", "Résultats"]],
-      ["Contact", ["Réserver votre séance", "Support", "Localisation"]],
+      ["Contact", ["Réservez votre séance", "Assistance", "Localisation"]],
     ],
     rights: "© 2026 BEAT BODY. Tous droits réservés.",
     aboutHeroTitle1: "PLUS QUE DU FITNESS.",
-    aboutHeroTitle2: "PAS QUE DES CORPS",
+    aboutHeroTitle2: "PAS SEULEMENT DES CORPS",
     aboutHeroSubtitle: "NOUS CONSTRUISONS LA PERFO",
     aboutHeroStrong: "RMANCE.",
     philosophyTitle: "NOTRE PHILOSOPHIE",
@@ -204,20 +219,20 @@ const pageText = {
       ["RÉSULTATS", "RÉSULTATS", "UNE FORCE MESURABLE. UNE RÉCUPÉRATION MESURABLE. UNE DIFFÉRENCE MESURABLE."],
     ],
     aboutExperienceItems: ["RÉCUPÉRATION", "EMS", "BIEN-ÊTRE", "RÉSULTATS", "PERFORMANCE", "COACHING"],
-    contactTitle1: "Commençons Ta",
-    contactTitle2: "Transformation",
+    contactTitle1: "Commençons votre",
+    contactTitle2: "transformation",
     contactBadge: "Équipement EMS moderne et avancé",
     contactIntro: "Que vous soyez prêt à réserver votre première séance d'EMS ou que vous ayez simplement une question, notre équipe est là pour vous guider à chaque étape.",
     contactFeatures: ["Technologie avancée", "Conseils d'expert", "Résultats exceptionnels", "Développez votre corps", "Et bien plus encore"],
     formTab: "Remplir le formulaire",
-    callTab: "Appelez-le",
-    formNote: "Nous te contacterons bientôt pour confirmer la réservation.",
+    callTab: "Appelez-nous",
+    formNote: "Nous vous contacterons bientôt pour confirmer la réservation.",
     callNote: "Notre équipe est disponible pour répondre à toutes vos questions.",
     namePlaceholder: "Prénom et Nom *",
     phonePlaceholder: "6XX XXX XXX",
     emailPlaceholder: "Email",
     messagePlaceholder: "Message*",
-    reserveButton: "Réserve ma séance",
+    reserveButton: "Je réserve ma séance",
     datePreferred: "Date préférée",
     continue: "Continuer",
     weekdays: ["LUN", "MAR", "MER", "JEU", "VEN", "SAM", "DIM"],
@@ -401,6 +416,90 @@ const scrollTimeline = {
   footer: { start: 15.21, end: 15.86 },
 };
 
+const getMobileJourneySequenceEnd = () => scrollTimeline.journey.sequenceStart + 1.28;
+
+const getMobileJourneyAnchors = () => {
+  const duration = getMobileJourneySequenceEnd() - scrollTimeline.journey.sequenceStart;
+  return [
+    scrollTimeline.journey.start,
+    scrollTimeline.journey.sequenceStart + duration * 0.24,
+    scrollTimeline.journey.sequenceStart + duration * 0.5,
+    scrollTimeline.journey.sequenceStart + duration * 0.76,
+    scrollTimeline.performance.start + (scrollTimeline.performance.end - scrollTimeline.performance.start) * 0.82,
+  ];
+};
+
+const getMobileHomeScrollAnchors = () => [
+  0,
+  scrollTimeline.about.start,
+  scrollTimeline.services.start,
+  scrollTimeline.why.start,
+  scrollTimeline.journey.start,
+  scrollTimeline.performance.start + (scrollTimeline.performance.end - scrollTimeline.performance.start) * 0.82,
+  scrollTimeline.pricing.start + (scrollTimeline.pricing.end - scrollTimeline.pricing.start) * 0.58,
+  scrollTimeline.cta.start + (scrollTimeline.cta.end - scrollTimeline.cta.start) * 0.72,
+  scrollTimeline.footer.start + (scrollTimeline.footer.end - scrollTimeline.footer.start) * 0.78,
+];
+
+const footerPageTargets = {
+  home: [
+    { type: "home-offset", offset: 0 },
+    { type: "home-offset", offset: scrollTimeline.about.start + (scrollTimeline.about.end - scrollTimeline.about.start) * 0.82 },
+    { type: "home-offset", offset: scrollTimeline.services.start + (scrollTimeline.services.end - scrollTimeline.services.start) * 0.82 },
+    { type: "home-offset", offset: scrollTimeline.why.start + (scrollTimeline.why.end - scrollTimeline.why.start) * 0.78 },
+    { type: "home-offset", offset: scrollTimeline.pricing.start + (scrollTimeline.pricing.end - scrollTimeline.pricing.start) * 0.82 },
+  ],
+  about: [
+    { type: "selector", selector: ".about-hero-copy", offsetPx: -90 },
+    { type: "selector", selector: "#about-story-title", offsetPx: -90 },
+    { type: "selector", selector: "#about-experience-title", offsetPx: -90 },
+  ],
+  services: [
+    { type: "selector", selector: ".services-page-inner", offsetPx: -90 },
+  ],
+  contact: [
+    { type: "contact-tab", tab: "form" },
+    { type: "contact-tab", tab: "call" },
+  ],
+};
+
+const getFooterColumns = ({ language }) => {
+  const text = pageText[language] || pageText.fr;
+  return [
+    {
+      title: text.nav?.[0] || "Home",
+      links: [
+        translations[language]?.nav?.[0] || "Home",
+        text.aboutPreviewTitle,
+        text.allServices,
+        text.whyTitle,
+        text.pricingTitle,
+      ].map((label, index) => ({ label, page: "home", target: footerPageTargets.home[index] })),
+    },
+    {
+      title: text.nav?.[1] || "Services",
+      links: [
+        { label: text.allServices, page: "services", target: footerPageTargets.services[0] },
+      ],
+    },
+    {
+      title: text.nav?.[2] || "About",
+      links: [
+        { label: text.aboutHeroTitle1, page: "about", target: footerPageTargets.about[0] },
+        { label: text.aboutStoryTitle, page: "about", target: footerPageTargets.about[1] },
+        { label: text.aboutExperienceTitle, page: "about", target: footerPageTargets.about[2] },
+      ],
+    },
+    {
+      title: text.nav?.[3] || "Contact",
+      links: [
+        { label: text.formTab, page: "contact", target: footerPageTargets.contact[0] },
+        { label: text.callTab, page: "contact", target: footerPageTargets.contact[1] },
+      ],
+    },
+  ];
+};
+
 const homeScrollAnchors = [
   0,
   scrollTimeline.about.start,
@@ -427,6 +526,9 @@ function App() {
   );
   const [pricingPlansData, setPricingPlansData] = useState(() => pricingPlans);
   const initialContactSettingsRef = useRef(null);
+  const pendingPricingScrollRef = useRef(false);
+  const pendingSectionTargetRef = useRef(null);
+  const [contactTabRequest, setContactTabRequest] = useState({ tab: "form", key: 0 });
   if (!initialContactSettingsRef.current) {
     initialContactSettingsRef.current = readStoredContactSettings();
   }
@@ -443,7 +545,7 @@ function App() {
   });
   const [serviceItems, setServiceItems] = useState(() => {
     const storedServices = readStoredJson(DASHBOARD_SERVICES_STORAGE_KEY, null);
-    return Array.isArray(storedServices) ? storedServices : servicesPageItems;
+    return fixLegacyServiceImages(Array.isArray(storedServices) ? storedServices : servicesPageItems);
   });
   const [featuredServiceTitles, setFeaturedServiceTitles] = useState(
     () => {
@@ -589,7 +691,12 @@ function App() {
     let isSnapping = false;
     let touchStartY = 0;
     let lastTouchY = 0;
+    let touchStartProgress = 0;
+    let journeyTouchActive = false;
+    let journeyGestureSnapped = false;
+    let performanceTouchActive = false;
     let performanceTouchConsumed = false;
+    let performanceBoundarySnapped = false;
     let snapFrame = 0;
 
     const easeInOutCubic = (value) =>
@@ -648,8 +755,11 @@ function App() {
     const consumePerformanceScroll = (deltaY) => {
       const viewportHeight = window.innerHeight || 1;
       const currentProgress = window.scrollY / viewportHeight;
+      const isMobileViewport = window.matchMedia("(max-width: 900px)").matches;
+      if (isMobileViewport) return false;
+      const performanceScrollStart = scrollTimeline.performance.start + (isMobileViewport ? 0.78 : 0.42);
       const isPerformanceStage =
-        currentProgress >= scrollTimeline.performance.start + 0.42 &&
+        currentProgress >= performanceScrollStart &&
         currentProgress < scrollTimeline.pricing.start - 0.06;
 
       if (!isPerformanceStage || Math.abs(deltaY) < 1) return false;
@@ -665,9 +775,10 @@ function App() {
 
       if ((deltaY > 0 && atBottom) || (deltaY < 0 && atTop)) return false;
 
+      const scrollDelta = isMobileViewport ? deltaY * 1.8 : deltaY;
       performanceContent.scrollTop = Math.min(
         maxScrollTop,
-        Math.max(0, performanceContent.scrollTop + deltaY),
+        Math.max(0, performanceContent.scrollTop + scrollDelta),
       );
       return true;
     };
@@ -675,29 +786,56 @@ function App() {
     const isInsideJourneySequence = (deltaY = 0) => {
       const viewportHeight = window.innerHeight || 1;
       const currentProgress = window.scrollY / viewportHeight;
+      const isMobileViewport = window.matchMedia("(max-width: 900px)").matches;
+      const sequenceRelease = isMobileViewport ? getMobileJourneySequenceEnd() : scrollTimeline.performance.start - 0.24;
       return (
         currentProgress >= scrollTimeline.journey.start - 0.02 &&
-        currentProgress < scrollTimeline.performance.start - 0.24
+        currentProgress < sequenceRelease
       ) || (
         deltaY < 0 &&
-        currentProgress >= scrollTimeline.performance.start - 0.24 &&
+        currentProgress >= sequenceRelease &&
         currentProgress <= scrollTimeline.performance.start + 0.35
       );
     };
 
-    const snapToSection = (direction) => {
+    const isMobileJourneyRange = () => {
+      if (!window.matchMedia("(max-width: 900px)").matches) return false;
+      const viewportHeight = window.innerHeight || 1;
+      const currentProgress = window.scrollY / viewportHeight;
+      return currentProgress >= scrollTimeline.journey.start - 0.04 && currentProgress < scrollTimeline.performance.start - 0.08;
+    };
+
+    const snapMobileJourneyStep = (direction, baseProgress) => {
+      const journeyAnchors = getMobileJourneyAnchors();
+      const currentIndex = journeyAnchors.reduce(
+        (closest, anchor, index) =>
+          Math.abs(anchor - baseProgress) < Math.abs(journeyAnchors[closest] - baseProgress) ? index : closest,
+        0,
+      );
+      const targetIndex = Math.min(
+        journeyAnchors.length - 1,
+        Math.max(0, currentIndex + (direction > 0 ? 1 : -1)),
+      );
+      if (targetIndex === currentIndex) return;
+      isSnapping = true;
+      const snapDuration = smoothSnapTo(journeyAnchors[targetIndex] * (window.innerHeight || 1));
+      window.setTimeout(() => {
+        isSnapping = false;
+      }, snapDuration + 45);
+    };
+
+    const snapToSection = (direction, options = {}) => {
       if (isSnapping || !direction) return;
 
       const viewportHeight = window.innerHeight || 1;
       const currentProgress = window.scrollY / viewportHeight;
       const isMobileViewport = window.matchMedia("(max-width: 900px)").matches;
-      const snapAnchors = isMobileViewport
-        ? [
-            ...homeScrollAnchors.slice(0, -1),
-            scrollTimeline.footer.start + (scrollTimeline.footer.end - scrollTimeline.footer.start) * 0.18,
-          ]
-        : homeScrollAnchors;
-      if (isInsideJourneySequence(direction)) return;
+      if (isMobileViewport && isMobileJourneyRange()) {
+        snapMobileJourneyStep(direction, currentProgress);
+        return;
+      }
+      const snapAnchors = isMobileViewport ? getMobileHomeScrollAnchors() : homeScrollAnchors;
+      if (!options.force && isInsideJourneySequence(direction)) return;
       const snapOffset = 0.06;
       let targetIndex = -1;
       if (direction > 0) {
@@ -722,6 +860,11 @@ function App() {
 
     const handleWheel = (event) => {
       if (Math.abs(event.deltaY) < 18) return;
+      if (window.matchMedia("(max-width: 900px)").matches && isMobileJourneyRange()) {
+        event.preventDefault();
+        snapToSection(event.deltaY);
+        return;
+      }
       if (consumePerformanceScroll(event.deltaY)) {
         event.preventDefault();
         return;
@@ -731,14 +874,57 @@ function App() {
     const handleTouchStart = (event) => {
       touchStartY = event.touches?.[0]?.clientY || 0;
       lastTouchY = touchStartY;
+      touchStartProgress = window.scrollY / (window.innerHeight || 1);
+      journeyTouchActive =
+        window.matchMedia("(max-width: 900px)").matches &&
+        touchStartProgress >= scrollTimeline.journey.start - 0.04 &&
+        touchStartProgress < scrollTimeline.performance.start - 0.08;
+      journeyGestureSnapped = false;
+      performanceTouchActive =
+        window.matchMedia("(max-width: 900px)").matches &&
+        Boolean(event.target?.closest?.(".performance-content"));
       performanceTouchConsumed = false;
+      performanceBoundarySnapped = false;
     };
 
     const handleTouchMove = (event) => {
       const currentY = event.touches?.[0]?.clientY || touchStartY;
       const deltaY = lastTouchY - currentY;
       const totalDeltaY = touchStartY - currentY;
+      if (journeyTouchActive) {
+        event.preventDefault();
+        if (!journeyGestureSnapped && Math.abs(totalDeltaY) >= 28) {
+          journeyGestureSnapped = true;
+          snapMobileJourneyStep(totalDeltaY, touchStartProgress);
+        }
+        lastTouchY = currentY;
+        return;
+      }
       if (Math.abs(totalDeltaY) < 8) return;
+      if (window.matchMedia("(max-width: 900px)").matches && isSnapping) {
+        event.preventDefault();
+        return;
+      }
+      if (isMobileJourneyRange()) {
+        event.preventDefault();
+        lastTouchY = currentY;
+        return;
+      }
+      if (window.matchMedia("(max-width: 900px)").matches) {
+        const performanceContent = event.target?.closest?.(".performance-content");
+        if (performanceContent && !performanceBoundarySnapped) {
+          const atTop = performanceContent.scrollTop <= 2;
+          const atBottom =
+            performanceContent.scrollTop + performanceContent.clientHeight >= performanceContent.scrollHeight - 2;
+          if ((deltaY < 0 && atTop) || (deltaY > 0 && atBottom)) {
+            performanceBoundarySnapped = true;
+            event.preventDefault();
+            snapToSection(deltaY, { force: true });
+            lastTouchY = currentY;
+            return;
+          }
+        }
+      }
       if (consumePerformanceScroll(deltaY)) {
         performanceTouchConsumed = true;
         lastTouchY = currentY;
@@ -751,8 +937,23 @@ function App() {
     const handleTouchEnd = (event) => {
       const touchEndY = event.changedTouches?.[0]?.clientY || touchStartY;
       const deltaY = touchStartY - touchEndY;
+      if (performanceTouchActive) {
+        performanceTouchActive = false;
+        return;
+      }
+      if (journeyTouchActive) {
+        journeyTouchActive = false;
+        if (!journeyGestureSnapped && Math.abs(deltaY) >= 28) {
+          snapMobileJourneyStep(deltaY, touchStartProgress);
+        }
+        return;
+      }
+      if (performanceBoundarySnapped) return;
       if (performanceTouchConsumed) return;
       if (Math.abs(deltaY) < 28) return;
+      if (window.matchMedia("(max-width: 900px)").matches) {
+        snapToSection(deltaY);
+      }
     };
 
     window.addEventListener("wheel", handleWheel, { passive: false });
@@ -861,7 +1062,17 @@ function App() {
       document.documentElement.style.setProperty("--performance-tile-2", String(performanceTile2));
       document.documentElement.style.setProperty("--performance-tile-3", String(performanceTile3));
       document.documentElement.style.setProperty("--performance-tile-4", String(performanceTile4));
-      document.documentElement.classList.toggle("performance-scroll-enabled", performanceProgress > 0.72 && pricingProgress < 0.02);
+      const isMobileViewport = window.matchMedia("(max-width: 900px)").matches;
+      if (isMobileViewport && performanceProgress < 0.08) {
+        const performanceContent = document.querySelector(".performance-content");
+        if (performanceContent?.scrollTop) {
+          performanceContent.scrollTop = 0;
+        }
+      }
+      const performanceScrollReady = !isMobileViewport && performanceProgress > 0.72 && pricingProgress < 0.02;
+      document.documentElement.classList.toggle("performance-scroll-enabled", performanceScrollReady);
+      const mobilePerformanceScrollReady = isMobileViewport && performanceProgress > 0.96 && pricingProgress < 0.02;
+      document.documentElement.classList.toggle("performance-mobile-scroll-enabled", mobilePerformanceScrollReady);
       document.documentElement.style.setProperty("--pricing-shift", `${(1 - pricingPanel) * 100}vh`);
       document.documentElement.style.setProperty("--pricing-exit-shift", exitShift(ctaPanel));
       document.documentElement.style.setProperty("--pricing-title", String(pricingTitle));
@@ -869,10 +1080,13 @@ function App() {
       document.documentElement.style.setProperty("--pricing-card-2", String(pricingCard2));
       document.documentElement.style.setProperty("--pricing-card-3", String(pricingCard3));
       document.documentElement.style.setProperty("--cta-shift", `${(1 - ctaPanel) * 100}vh`);
-      document.documentElement.style.setProperty("--cta-exit-shift", `${footerPanel * -homeFooterHeight}px`);
+      const ctaFooterShift = isMobileViewport
+        ? window.innerHeight
+        : homeFooterHeight;
+      document.documentElement.style.setProperty("--cta-exit-shift", `${footerPanel * -ctaFooterShift}px`);
       document.documentElement.style.setProperty("--cta-media", String(ctaMedia));
       document.documentElement.style.setProperty("--cta-copy", String(ctaCopy));
-      document.documentElement.style.setProperty("--cta-footer-lift", `${footerProgress * -28}vh`);
+      document.documentElement.style.setProperty("--cta-footer-lift", isMobileViewport ? "0vh" : `${footerProgress * -28}vh`);
       document.documentElement.style.setProperty("--footer-shift", `${(1 - footerPanel) * 100}%`);
       document.documentElement.style.setProperty("--footer-copy", "1");
       setJourneyHeaderActive(progress >= scrollTimeline.journey.start);
@@ -888,10 +1102,12 @@ function App() {
     updateScrollProgress();
     window.addEventListener("scroll", requestUpdate, { passive: true });
     window.addEventListener("resize", requestUpdate);
+    window.visualViewport?.addEventListener("resize", requestUpdate);
 
     return () => {
       window.removeEventListener("scroll", requestUpdate);
       window.removeEventListener("resize", requestUpdate);
+      window.visualViewport?.removeEventListener("resize", requestUpdate);
       if (frameId) {
         window.cancelAnimationFrame(frameId);
       }
@@ -902,6 +1118,88 @@ function App() {
     setPage(nextPage);
     window.scrollTo({ top: 0, behavior: "auto" });
   };
+
+  const goToPricingSection = () => {
+    if (page === "home") {
+      window.scrollTo({
+        top: window.innerHeight * (scrollTimeline.pricing.start + 1.12),
+        behavior: "smooth",
+      });
+      return;
+    }
+    pendingPricingScrollRef.current = true;
+    navigateTo("home");
+  };
+
+  useEffect(() => {
+    if (page !== "home" || !pendingPricingScrollRef.current) return;
+    pendingPricingScrollRef.current = false;
+    const frame = window.requestAnimationFrame(() => {
+      window.scrollTo({
+        top: window.innerHeight * (scrollTimeline.pricing.start + 1.12),
+        behavior: "smooth",
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [page]);
+
+  const applySectionTarget = (target) => {
+    if (!target || target.type === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (target.type === "home-offset") {
+      window.scrollTo({ top: window.innerHeight * target.offset, behavior: "smooth" });
+      return;
+    }
+    if (target.type === "selector") {
+      const element = document.querySelector(target.selector);
+      if (!element) return;
+      const viewportHeight = window.innerHeight || 1;
+      const rect = element.getBoundingClientRect();
+      const alignOffset = target.align === "center"
+        ? Math.max(0, (rect.height - viewportHeight) / 2)
+        : target.offsetPx ?? ((target.offsetVh ?? 0) / 100) * viewportHeight;
+      window.scrollTo({
+        top: rect.top + window.scrollY + alignOffset,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  const goToFooterSection = (pageKey, target = { type: "top" }) => {
+    const scrollTarget = target?.type === "contact-tab"
+      ? { type: "selector", selector: ".contact-grid", offsetPx: -90 }
+      : target;
+
+    if (target?.type === "contact-tab") {
+      setContactTabRequest((current) => ({ tab: target.tab, key: current.key + 1 }));
+    }
+
+    if (page !== pageKey) {
+      pendingSectionTargetRef.current = scrollTarget;
+      navigateTo(pageKey);
+      return;
+    }
+
+    applySectionTarget(scrollTarget);
+  };
+
+  useEffect(() => {
+    if (!pendingSectionTargetRef.current) return;
+    const target = pendingSectionTargetRef.current;
+    pendingSectionTargetRef.current = null;
+    let secondFrame = 0;
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        window.setTimeout(() => applySectionTarget(target), 60);
+      });
+    });
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      if (secondFrame) window.cancelAnimationFrame(secondFrame);
+    };
+  }, [page]);
 
   const saveSiteSettings = async (overrides = {}) => {
     const settings = {
@@ -986,8 +1284,8 @@ function App() {
           onNavigate={navigateTo}
           mobileMenu
         />
-        <ServicesPage items={serviceItems} language={language} />
-        <FooterSection staticMode language={language} />
+        <ServicesPage items={serviceItems} language={language} onNavigate={navigateTo} onViewPricing={goToPricingSection} />
+        <FooterSection staticMode language={language} pageKey="services" services={serviceItems} onNavigate={goToFooterSection} />
       </main>
     );
   }
@@ -1003,8 +1301,8 @@ function App() {
           mobileMenu
         />
         <AboutPage language={language} />
-        <FinalCtaSection staticMode language={language} />
-        <FooterSection staticMode language={language} />
+        <FinalCtaSection staticMode language={language} onNavigate={navigateTo} />
+        <FooterSection staticMode language={language} services={serviceItems} onNavigate={goToFooterSection} />
       </main>
     );
   }
@@ -1019,8 +1317,14 @@ function App() {
           onNavigate={navigateTo}
           mobileMenu
         />
-        <ContactPage phones={contactPhones} emails={contactEmails} blockedDates={blockedDates} language={language} />
-        <FooterSection staticMode language={language} />
+        <ContactPage
+          phones={contactPhones}
+          emails={contactEmails}
+          blockedDates={blockedDates}
+          language={language}
+          tabRequest={contactTabRequest}
+        />
+        <FooterSection staticMode language={language} services={serviceItems} onNavigate={goToFooterSection} />
       </main>
     );
   }
@@ -1051,11 +1355,11 @@ function App() {
         items={homeServiceItems.length ? homeServiceItems : services}
       />
       <WhySection language={language} />
-      <JourneySection language={language} />
+      <JourneySection language={language} onNavigate={navigateTo} />
       <PerformanceSection language={language} />
       <PricingSection plans={pricingPlansData} language={language} onNavigate={navigateTo} />
       <FinalCtaSection language={language} onNavigate={navigateTo} />
-      <FooterSection staticMode language={language} />
+      <FooterSection staticMode language={language} services={serviceItems} onNavigate={goToFooterSection} />
       {showSplash && <Splash />}
     </main>
   );
@@ -1064,7 +1368,7 @@ function App() {
 function Splash() {
   return (
     <section className="splash" aria-label="Beat Body loading animation">
-      <img className="splash-logo" src="/beat-body-splash-logo.png" alt="Beat Body" />
+      <img className="splash-logo" src="/beat-body-splash-logo.webp" alt="Beat Body" />
       <div className="tile tile-a" />
       <div className="tile tile-b" />
       <div className="tile tile-c" />
@@ -1116,7 +1420,7 @@ function MobileMenu({ open, onClose, activeIndex, language, onLanguageChange, on
             onClose();
           }}
         >
-          <img src="/beat-body-logo.png" alt="Beat Body" />
+          <img src="/beat-body-logo.webp" alt="Beat Body" />
         </a>
         <button className="mobile-menu-close" type="button" aria-label="Close menu" onClick={onClose}>
           <X />
@@ -1216,7 +1520,7 @@ function Hero({ activeIndex = 0, language, onLanguageChange, onNavigate }) {
     <section className="hero" aria-label="Beat Body EMS studio">
       <div className="hero-bg" />
       <div className="shade" />
-      <img key={`people-${replayKey}`} className="people" src="/people.png" alt="" />
+      <img key={`people-${replayKey}`} className="people" src="/people.webp" alt="" />
 
       <header className={mobileMenuOpen ? "topbar mobile-menu-visible" : "topbar"}>
         <a
@@ -1228,7 +1532,7 @@ function Hero({ activeIndex = 0, language, onLanguageChange, onNavigate }) {
             onNavigate("home");
           }}
         >
-          <img src="/beat-body-logo.png" alt="Beat Body" />
+          <img src="/beat-body-logo.webp" alt="Beat Body" />
         </a>
 
         <div className="center-controls">
@@ -1308,7 +1612,7 @@ function Hero({ activeIndex = 0, language, onLanguageChange, onNavigate }) {
         <h1 dir="ltr">
           <span className="title-word title-beat">Beat</span>
           <span className="title-body">
-            <img className="mobile-title-mark" src="/mobile-title-b.png" alt="B" />
+            <img className="mobile-title-mark" src="/mobile-title-b.webp" alt="B" />
             <span className="title-word">ody</span>
             <sup>&reg;</sup>
           </span>
@@ -1346,7 +1650,7 @@ function Hero({ activeIndex = 0, language, onLanguageChange, onNavigate }) {
       </aside>
 
       <aside key={`proof-card-${replayKey}`} className="proof-card">
-        <img src="/proof-card.png" alt={t.proof} />
+        <img src="/proof-card.webp" alt={t.proof} />
       </aside>
 
       <MobileMenu
@@ -1396,7 +1700,7 @@ function PostHeroHeader({ activeIndex = 0, language, onLanguageChange, journeyAc
           setMobileMenuOpen(false);
         }}
       >
-        <img src="/beat-body-logo.png" alt="Beat Body" />
+        <img src="/beat-body-logo.webp" alt="Beat Body" />
       </a>
 
       <div className="center-controls">
@@ -1490,7 +1794,7 @@ function PrioritySection({ language = "fr" }) {
     <section className={`priority-section priority-section-${language}`} aria-label="Beat Body priority">
       <div className="priority-content">
         <p className="priority-kicker">
-          <img className="priority-vector" src="/priority-vector.png" alt="" />
+          <img className="priority-vector" src="/priority-vector.webp" alt="" />
           <span className="priority-text-label">{text.priorityKicker}</span>
         </p>
 
@@ -1498,7 +1802,7 @@ function PrioritySection({ language = "fr" }) {
           <span className="priority-title-row priority-title-row-top">
             <span>{text.priorityWords[0]}</span>
             <span>{text.priorityWords[1]}</span>
-            <img src="/priority-pill-right.png" alt="" />
+            <img src="/priority-pill-right.webp" alt="" />
           </span>
           <span className="priority-title-row priority-title-row-middle">
             <span>{text.priorityWords[2]}</span>
@@ -1506,12 +1810,12 @@ function PrioritySection({ language = "fr" }) {
             <span>{text.priorityWords[3]}</span>
           </span>
           <span className="priority-title-row priority-title-row-bottom">
-            <img src="/priority-pill-left.png" alt="" />
+            <img src="/priority-pill-left.webp" alt="" />
             <span>{text.priorityWords[4]}</span>
             <span>{text.priorityWords[5]}</span>
           </span>
         </h2>
-        <img className="priority-suit" src="/priority-suit.png" alt="EMS training suit" />
+        <img className="priority-suit" src="/priority-suit.webp" alt="EMS training suit" />
       </div>
     </section>
   );
@@ -1548,7 +1852,7 @@ function AboutVideoSection({ language = "fr" }) {
         </aside>
 
         <span className="about-tag-text">{text.servicesKicker}</span>
-        <img className="about-wordmark" src="/about-beat-body.png" alt="Beat Body" />
+        <img className="about-wordmark" src="/about-beat-body.webp" alt="Beat Body" />
       </div>
     </section>
   );
@@ -1558,19 +1862,19 @@ const services = [
   {
     title: "EMS TRAINING",
     text: "ACTIVATE MORE MUSCLES IN LESS TIME WITH INTELLIGENT ELECTRO MUSCLE STIMULATION TECHNOLOGY.",
-    base: "/service-ems-cutout.png",
+    base: "/service-ems-cutout.webp",
     active: "/service-ems-photo.jpg",
   },
   {
     title: "PERSONALIZED COACHING",
     text: "TAILORED PROGRAMS ADAPTED TO YOUR GOALS, LEVEL, AND PHYSICAL CONDITION.",
-    base: "/service-coaching-cutout.png",
+    base: "/service-coaching-cutout.webp",
     active: "/service-coaching-photo.jpg",
   },
   {
     title: "SPORTS RECOVERY",
     text: "ACCELERATE RECOVERY AND REDUCE MUSCLE FATIGUE AFTER INTENSE ACTIVITY.",
-    base: "/service-sports-cutout.png",
+    base: "/service-sports-cutout.webp",
     active: "/service-sports-photo.jpg",
   },
 ];
@@ -1580,31 +1884,35 @@ const servicesPageItems = [
   {
     title: "MASSAGE THERAPY",
     text: "PROFESSIONAL THERAPEUTIC MASSAGE DESIGNED FOR ATHLETES AND ACTIVE LIFESTYLES.",
-    base: "/service-massage-photo-cutout.png",
-    active: "/service-massage-cutout.png",
+    base: "/service-massage-photo-cutout.webp",
+    active: "/service-massage-cutout.webp",
     overlay: true,
   },
   {
     title: "MUSCLE RECOVERY",
     text: "RESTORE MUSCLE FUNCTION AND IMPROVE FLEXIBILITY AND MOBILITY.",
-    base: "/service-muscle-cutout.png",
+    base: "/service-muscle-cutout.webp",
     active: "/service-muscle-photo.jpg",
   },
   {
     title: "COGNITIVE BODY TRAINING",
     text: "A HOLISTIC APPROACH COMBINING BODY PERFORMANCE, COORDINATION, AND MENTAL ENGAGEMENT.",
-    base: "/service-cognitive-cutout.png",
+    base: "/service-cognitive-cutout.webp",
     active: "/service-cognitive-photo.jpg",
   },
 ];
 
-function ServiceCard({ service, index, className = "", isActive = false, language = "fr", onNavigate }) {
+function ServiceCard({ service, index, className = "", isActive = false, language = "fr", onNavigate, onViewPricing }) {
   const text = pageText[language] || pageText.fr;
   const localizedService = text.serviceTexts[service.title];
   const serviceTitle = localizedService?.[0] || service.title;
   const serviceBody = localizedService?.[1] || service.text;
   const handlePricingClick = (event) => {
     event.preventDefault();
+    if (onViewPricing) {
+      onViewPricing();
+      return;
+    }
     window.scrollTo({
       top: window.innerHeight * (scrollTimeline.pricing.start + 1.12),
       behavior: "smooth",
@@ -1623,6 +1931,7 @@ function ServiceCard({ service, index, className = "", isActive = false, languag
         isActive ? "is-active" : "",
         className,
       ].filter(Boolean).join(" ")}
+      data-service-anchor={service.title}
       style={{ "--card-index": index }}
       tabIndex="0"
     >
@@ -1690,7 +1999,7 @@ function ServicesSection({ onNavigate, items = services, language = "fr" }) {
       <div className="services-content">
         <div className="services-heading">
           <p className="services-kicker">
-            <img className="priority-vector" src="/priority-vector.png" alt="" />
+            <img className="priority-vector" src="/priority-vector.webp" alt="" />
             <span>{text.servicesKicker}</span>
           </p>
           <a
@@ -1772,7 +2081,7 @@ function DashboardAccessPage({ onSuccess, onCancel }) {
   return (
     <main className="dashboard-access-page">
       <section className="dashboard-access-card" aria-labelledby="dashboard-access-title">
-        <img src="/beat-body-logo.png" alt="Beat Body" />
+        <img src="/beat-body-logo.webp" alt="Beat Body" />
         <p className="dashboard-access-kicker">Archive interne</p>
         <h1 id="dashboard-access-title">Accès réservé</h1>
         <form onSubmit={submitLogin}>
@@ -2027,7 +2336,7 @@ function DashboardPage({
     <main className="dashboard-page">
       <aside className="dashboard-sidebar">
         <div className="dashboard-brand">
-          <img src="/beat-body-logo.png" alt="Beat Body" />
+          <img src="/beat-body-logo.webp" alt="Beat Body" />
         </div>
 
         <nav className="dashboard-nav">
@@ -2200,7 +2509,7 @@ function DashboardPage({
               <div className="dashboard-contact-card">
                 <div className="dashboard-contact-card-header">
                   <Calendar size={16} />
-                  <span>Date de reservation</span>
+                  <span>Date de réservation</span>
                 </div>
 
                 <div className="dashboard-calendar-row">
@@ -2523,14 +2832,14 @@ function DashboardPage({
   );
 }
 
-function ServicesPage({ items = servicesPageItems, language = "fr" }) {
+function ServicesPage({ items = servicesPageItems, language = "fr", onNavigate, onViewPricing }) {
   const text = pageText[language] || pageText.fr;
   return (
     <section className="services-page-section" aria-label="All Beat Body services">
       <div className="services-page-inner">
         <div className="services-heading services-page-heading">
           <p className="services-kicker">
-            <img className="priority-vector" src="/priority-vector.png" alt="" />
+            <img className="priority-vector" src="/priority-vector.webp" alt="" />
             <span>{text.servicesKicker}</span>
           </p>
         </div>
@@ -2543,6 +2852,8 @@ function ServicesPage({ items = servicesPageItems, language = "fr" }) {
               service={service}
               index={index}
               language={language}
+              onNavigate={onNavigate}
+              onViewPricing={onViewPricing}
             />
           ))}
         </div>
@@ -2554,26 +2865,26 @@ function ServicesPage({ items = servicesPageItems, language = "fr" }) {
 const whyItems = [
   {
     title: "Tailored Programs for Every Goal",
-    icon: "/why-icon-programs.png",
-    image: "/why-programs.png",
+    icon: "/why-icon-programs.webp",
+    image: "/why-programs.webp",
     text: "Whether your objective is weight loss, muscle gain, rehabilitation, or performance improvement.",
   },
   {
     title: "Expert Coaches and Specialists",
-    icon: "/why-icon-coaches.png",
-    image: "/why-coaches.png",
+    icon: "/why-icon-coaches.webp",
+    image: "/why-coaches.webp",
     text: "Receive guidance from qualified professionals specialized in performance and recovery.",
   },
   {
     title: "A Complete Recovery Experience",
-    icon: "/why-icon-recovery.png",
-    image: "/why-recovery.png",
+    icon: "/why-icon-recovery.webp",
+    image: "/why-recovery.webp",
     text: "Recovery is not an option - it is part of the process.",
   },
   {
     title: "State-of-the-Art EMS Equipment",
-    icon: "/why-icon-equipment.png",
-    image: "/why-equipment.png",
+    icon: "/why-icon-equipment.webp",
+    image: "/why-equipment.webp",
     text: "Train with the latest generation of EMS technology designed for performance and efficiency.",
   },
 ];
@@ -2686,7 +2997,7 @@ const journeyCards = [
   { number: "04.", Icon: Sparkles, tone: "fade" },
 ];
 
-function JourneySection({ language = "fr" }) {
+function JourneySection({ language = "fr", onNavigate }) {
   const text = pageText[language] || pageText.fr;
   const [visibleSteps, setVisibleSteps] = useState(0);
   const [exitingSteps, setExitingSteps] = useState([]);
@@ -2698,16 +3009,24 @@ function JourneySection({ language = "fr" }) {
       frameId = 0;
       const viewportHeight = window.innerHeight || 1;
       const progress = window.scrollY / viewportHeight;
+      const isMobileViewport = window.matchMedia("(max-width: 900px)").matches;
+      const sequenceEnd = isMobileViewport ? getMobileJourneySequenceEnd() : scrollTimeline.journey.sequenceEnd;
       const sectionReached = progress >= scrollTimeline.journey.start - 0.04;
-      const sequence = Math.min(
-        1,
-        Math.max(
-          0,
-          (progress - scrollTimeline.journey.sequenceStart) /
-            (scrollTimeline.journey.sequenceEnd - scrollTimeline.journey.sequenceStart),
-        ),
-      );
-      const sequenceSteps = sequence >= 0.72 ? 3 : sequence >= 0.46 ? 2 : sequence >= 0.2 ? 1 : 0;
+      let sequenceSteps = 0;
+      if (isMobileViewport) {
+        const [, card2, card3, card4] = getMobileJourneyAnchors();
+        sequenceSteps = progress >= card4 - 0.01 ? 3 : progress >= card3 - 0.01 ? 2 : progress >= card2 - 0.01 ? 1 : 0;
+      } else {
+        const sequence = Math.min(
+          1,
+          Math.max(
+            0,
+            (progress - scrollTimeline.journey.sequenceStart) /
+              (sequenceEnd - scrollTimeline.journey.sequenceStart),
+          ),
+        );
+        sequenceSteps = sequence >= 0.72 ? 3 : sequence >= 0.46 ? 2 : sequence >= 0.2 ? 1 : 0;
+      }
       const nextVisibleSteps = sectionReached ? 1 + sequenceSteps : 0;
       const previousVisibleSteps = previousVisibleStepsRef.current;
 
@@ -2768,7 +3087,8 @@ function JourneySection({ language = "fr" }) {
           href="#contact"
           onClick={(event) => {
             event.preventDefault();
-            window.location.hash = "contact";
+            if (onNavigate) onNavigate("contact");
+            else window.location.hash = "contact";
           }}
           style={{
             "--journey-book-top": visibleSteps <= 1 ? 32.5 : 32.5 + (visibleSteps - 1) * 13.5,
@@ -2778,7 +3098,7 @@ function JourneySection({ language = "fr" }) {
         </a>
         <img
           className="journey-rail"
-          src={`/journey-rail-${visibleSteps}.png`}
+          src={`/journey-rail-${visibleSteps}.webp`}
           alt=""
         />
       </div>
@@ -2843,18 +3163,18 @@ function PerformanceSection({ language = "fr" }) {
         <h2 id="performance-title">{text.performanceTitle}</h2>
         <div className="performance-grid">
           <article className="performance-tile full-body" ref={(el) => { tileRefs.current[0] = el; }}>
-            <img src="/performance-full-body.png" alt="" />
+            <img src="/performance-full-body.webp" alt="" />
             <span>{text.performanceTiles[0]}</span>
           </article>
           <article className="performance-tile recovery" ref={(el) => { tileRefs.current[1] = el; }}>
-            <img src="/performance-recovery.png" alt="" />
+            <img src="/performance-recovery.webp" alt="" />
             <span>{text.performanceTiles[1]}</span>
           </article>
           <article className="performance-tile technology" ref={(el) => { tileRefs.current[2] = el; }}>
             <video
               ref={technologyVideoRef}
               src="/performance-technology.mp4"
-              poster="/performance-technology.png"
+              poster="/performance-technology.webp"
               muted
               loop
               playsInline
@@ -2864,7 +3184,7 @@ function PerformanceSection({ language = "fr" }) {
             <span>{text.performanceTiles[2]}</span>
           </article>
           <article className="performance-tile experience" ref={(el) => { tileRefs.current[3] = el; }}>
-            <img src="/performance-experience.png" alt="" />
+            <img src="/performance-experience.webp" alt="" />
             <span>{text.performanceTiles[3]}</span>
           </article>
         </div>
@@ -3179,7 +3499,7 @@ function AboutPage({ language = "fr" }) {
 
 const ABOUT_TITLE_LINE_TARGETS = [1, 0.84];
 const ABOUT_TITLE_LINE_TARGETS_AR = [1, 1];
-const ABOUT_TITLE_LINE2_TEXT = "PAS QUE DES CORPS";
+const ABOUT_TITLE_LINE2_TEXT = "PAS SEULEMENT DES CORPS";
 
 function AboutHeroSection({ language = "fr" }) {
   const text = pageText[language] || pageText.fr;
@@ -3270,8 +3590,8 @@ function AboutHeroSection({ language = "fr" }) {
         </h1>
         <p>{text.aboutHeroSubtitle}<strong>{text.aboutHeroStrong}</strong></p>
       </div>
-      <img ref={suitRef} className="about-hero-suit" src="/about-suit.png" alt="" />
-      <img className="about-hero-photo" src="/about-philosophy.png" alt="Beat Body EMS preparation" />
+      <img ref={suitRef} className="about-hero-suit" src="/about-suit.webp" alt="" />
+      <img className="about-hero-photo" src="/about-philosophy.webp" alt="Beat Body EMS preparation" />
       <article className="about-philosophy">
         <h2>{text.philosophyTitle}</h2>
         <p>{text.philosophyBody}</p>
@@ -3298,6 +3618,7 @@ function AboutStorySection({ language = "fr" }) {
         <div className="about-story-items">
           {localizedSteps.map((step, index) => (
             <article
+              id={`about-story-step-${step.number}`}
               className={`about-story-step is-${step.side}`}
               key={step.number}
               style={{ "--story-index": index }}
@@ -3445,7 +3766,7 @@ function FinalCtaSection({ staticMode = false, language = "fr", onNavigate }) {
           </div>
           <h2 id="final-cta-title">
             <span>{text.ctaTitle1}</span>
-            <span className="mark-inline"><img src="/priority-vector.png" alt="" /></span>
+            <span className="mark-inline"><img src="/priority-vector.webp" alt="" /></span>
             <span>{text.ctaTitle2}</span>
           </h2>
           <p>{text.ctaBody}</p>
@@ -3507,9 +3828,9 @@ function FooterWatermark() {
   );
 }
 
-function FooterSection({ staticMode = false, language = "fr" }) {
+function FooterSection({ staticMode = false, language = "fr", pageKey = "home", services: pageServices = [], onNavigate }) {
   const text = pageText[language] || pageText.fr;
-  const footerSections = text.footerSections.map(([title, items]) => ({ title, items }));
+  const footerColumns = getFooterColumns({ pageKey, language, services: pageServices });
   const openDashboardAccess = (event) => {
     event.preventDefault();
     window.location.hash = "dashboard";
@@ -3522,7 +3843,7 @@ function FooterSection({ staticMode = false, language = "fr" }) {
       <div className="footer-content">
         <div className="footer-brand-row">
           <div className="footer-brand">
-            <img src="/beat-body-logo.png" alt="Beat Body" />
+            <img src="/beat-body-logo.webp" alt="Beat Body" />
             <span />
             <p>{text.footerTagline}</p>
           </div>
@@ -3547,8 +3868,13 @@ function FooterSection({ staticMode = false, language = "fr" }) {
               </a>
             </div>
           </div>
-          {footerSections.map((section) => (
-            <FooterColumn key={section.title} title={section.title} items={section.items} />
+          {footerColumns.map((section) => (
+            <FooterColumn
+              key={section.title}
+              title={section.title}
+              links={section.links}
+              onNavigate={onNavigate}
+            />
           ))}
         </div>
         <div className="footer-bottom">
@@ -3562,12 +3888,22 @@ function FooterSection({ staticMode = false, language = "fr" }) {
   );
 }
 
-function FooterColumn({ title, items }) {
+function FooterColumn({ title, links, onNavigate }) {
   return (
     <nav className="footer-column" aria-label={title}>
       <h3>{title}</h3>
-      {items.map((item) => (
-        <a href="#" key={item}>{item}</a>
+      {links.map((link) => (
+        <a
+          href={link.page ? `#${link.page}` : "#"}
+          key={link.label}
+          onClick={(event) => {
+            if (!onNavigate || !link.page) return;
+            event.preventDefault();
+            onNavigate(link.page, link.target);
+          }}
+        >
+          {link.label}
+        </a>
       ))}
     </nav>
   );
@@ -3645,14 +3981,14 @@ function StoreIcon({ type }) {
 
 function ServicesPageFooter({ language = "fr" }) {
   const text = pageText[language] || pageText.fr;
-  const footerSections = text.footerSections.map(([title, items]) => ({ title, items }));
+  const footerColumns = getFooterColumns({ pageKey: "services", language, services: servicesPageItems });
 
   return (
     <footer className="services-page-footer" aria-label="Beat Body footer">
       <div className="footer-content services-page-footer-content">
         <div className="footer-brand-row">
           <div className="footer-brand">
-            <img src="/beat-body-logo.png" alt="Beat Body" />
+            <img src="/beat-body-logo.webp" alt="Beat Body" />
             <span />
             <p>{text.footerTagline}</p>
           </div>
@@ -3677,8 +4013,8 @@ function ServicesPageFooter({ language = "fr" }) {
               </a>
             </div>
           </div>
-          {footerSections.map((section) => (
-            <FooterColumn key={section.title} title={section.title} items={section.items} />
+          {footerColumns.map((section) => (
+            <FooterColumn key={section.title} title={section.title} links={section.links} />
           ))}
         </div>
         <div className="footer-bottom">
@@ -3848,7 +4184,7 @@ function ContactDateModal({
   );
 }
 
-function ContactPage({ phones = [], emails = [], blockedDates = new Set(), language = "fr" }) {
+function ContactPage({ phones = [], emails = [], blockedDates = new Set(), language = "fr", tabRequest }) {
   const text = pageText[language] || pageText.fr;
   const [activeTab, setActiveTab] = useState("form");
   const [showModal, setShowModal] = useState(false);
@@ -3865,6 +4201,13 @@ function ContactPage({ phones = [], emails = [], blockedDates = new Set(), langu
     email: "",
     message: "",
   });
+
+  useEffect(() => {
+    if (["form", "call"].includes(tabRequest?.tab)) {
+      setActiveTab(tabRequest.tab);
+      setShowModal(false);
+    }
+  }, [tabRequest]);
 
   const updateFormData = (field, value) => {
     setFormData((current) => ({ ...current, [field]: value }));
@@ -3883,12 +4226,12 @@ function ContactPage({ phones = [], emails = [], blockedDates = new Set(), langu
     if (!selectedDate) return;
     const whatsappNumber = "212615230807";
     const text = [
-      "Nouvelle demande de reservation Beat Body",
+      "Nouvelle demande de réservation Beat Body",
       "",
       `Nom: ${formData.name}`,
-      `Telephone: +212 ${formData.phone}`,
+      `Téléphone: +212 ${formData.phone}`,
       ...(formData.email ? [`Email: ${formData.email}`] : []),
-      `Date preferee: ${formatSelectedDate(selectedDate)}`,
+      `Date préférée: ${formatSelectedDate(selectedDate)}`,
       `Message: ${formData.message}`,
     ].join("\n");
     window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
@@ -3912,7 +4255,7 @@ function ContactPage({ phones = [], emails = [], blockedDates = new Set(), langu
   ];
 
   return (
-    <section className="contact-page-content">
+    <section className="contact-page-content" id="contact-section">
       <div className="contact-grid">
         <div className="contact-intro">
           <h1>
@@ -3923,8 +4266,8 @@ function ContactPage({ phones = [], emails = [], blockedDates = new Set(), langu
 
           <div className="contact-badge">
             <span className="contact-badge-avatars">
-              <img src="/people.png" alt="" />
-              <img src="/proof-athlete.png" alt="" />
+              <img src="/people.webp" alt="" />
+              <img src="/proof-athlete.webp" alt="" />
             </span>
             {text.contactBadge}
           </div>
@@ -3967,7 +4310,7 @@ function ContactPage({ phones = [], emails = [], blockedDates = new Set(), langu
           </div>
 
           <div className="contact-card-logo">
-            <img src="/contact-form-logo-tight.png" alt="Beat Body" />
+            <img src="/contact-form-logo-tight.webp" alt="Beat Body" />
           </div>
 
           {activeTab === "form" ? (
