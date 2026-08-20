@@ -31,8 +31,15 @@ import {
   CheckCircle2,
   Mail,
 } from "lucide-react";
-import { supabase, SITE_SETTINGS_ID, SUPABASE_ADMIN_EMAIL } from "./supabaseClient";
 import "./styles.css";
+
+let supabaseClientPromise = null;
+const loadSupabaseClient = () => {
+  if (!supabaseClientPromise) {
+    supabaseClientPromise = import("./supabaseClient");
+  }
+  return supabaseClientPromise;
+};
 
 const DASHBOARD_SERVICES_STORAGE_KEY = "beat-body-dashboard-services";
 const DASHBOARD_FEATURED_SERVICES_STORAGE_KEY = "beat-body-dashboard-featured-services";
@@ -559,6 +566,7 @@ function App() {
     let cancelled = false;
 
     const loadSiteSettings = async () => {
+      const { supabase, SITE_SETTINGS_ID } = await loadSupabaseClient();
       if (!supabase) return;
 
       const { data, error } = await supabase
@@ -586,38 +594,61 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!supabase) {
-      window.sessionStorage.removeItem(DASHBOARD_UNLOCK_STORAGE_KEY);
-      setDashboardUnlocked(false);
+    let cancelled = false;
+    let authSubscription = null;
+    const shouldCheckDashboardAuth =
+      page === "dashboard" || window.sessionStorage.getItem(DASHBOARD_UNLOCK_STORAGE_KEY) === "true";
+
+    if (!shouldCheckDashboardAuth) {
       setDashboardAuthChecked(true);
       return undefined;
     }
 
-    supabase.auth.getSession().then(({ data }) => {
-      const hasSession = Boolean(data.session);
-      if (hasSession) {
-        window.sessionStorage.setItem(DASHBOARD_UNLOCK_STORAGE_KEY, "true");
-        setDashboardUnlocked(true);
-      } else {
+    const checkAuthSession = async () => {
+      const { supabase } = await loadSupabaseClient();
+      if (cancelled) return;
+
+      if (!supabase) {
         window.sessionStorage.removeItem(DASHBOARD_UNLOCK_STORAGE_KEY);
         setDashboardUnlocked(false);
+        setDashboardAuthChecked(true);
+        return;
       }
-      setDashboardAuthChecked(true);
-    });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        window.sessionStorage.setItem(DASHBOARD_UNLOCK_STORAGE_KEY, "true");
-        setDashboardUnlocked(true);
-      } else {
-        window.sessionStorage.removeItem(DASHBOARD_UNLOCK_STORAGE_KEY);
-        setDashboardUnlocked(false);
-      }
-      setDashboardAuthChecked(true);
-    });
+      supabase.auth.getSession().then(({ data }) => {
+        if (cancelled) return;
+        const hasSession = Boolean(data.session);
+        if (hasSession) {
+          window.sessionStorage.setItem(DASHBOARD_UNLOCK_STORAGE_KEY, "true");
+          setDashboardUnlocked(true);
+        } else {
+          window.sessionStorage.removeItem(DASHBOARD_UNLOCK_STORAGE_KEY);
+          setDashboardUnlocked(false);
+        }
+        setDashboardAuthChecked(true);
+      });
 
-    return () => authListener.subscription.unsubscribe();
-  }, []);
+      const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (cancelled) return;
+        if (session) {
+          window.sessionStorage.setItem(DASHBOARD_UNLOCK_STORAGE_KEY, "true");
+          setDashboardUnlocked(true);
+        } else {
+          window.sessionStorage.removeItem(DASHBOARD_UNLOCK_STORAGE_KEY);
+          setDashboardUnlocked(false);
+        }
+        setDashboardAuthChecked(true);
+      });
+      authSubscription = authListener.subscription;
+    };
+
+    checkAuthSession();
+
+    return () => {
+      cancelled = true;
+      authSubscription?.unsubscribe();
+    };
+  }, [page]);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -1236,6 +1267,7 @@ function App() {
       ...overrides,
     };
 
+    const { supabase, SITE_SETTINGS_ID } = await loadSupabaseClient();
     if (!supabase) {
       return { ok: false, error: "Supabase is not configured in this environment." };
     }
@@ -1258,6 +1290,7 @@ function App() {
   };
 
   const lockDashboard = async () => {
+    const { supabase } = await loadSupabaseClient();
     if (supabase) {
       await supabase.auth.signOut();
     }
@@ -1392,7 +1425,7 @@ function App() {
 function Splash() {
   return (
     <section className="splash" aria-label="Beat Body loading animation">
-      <img className="splash-logo" src="/beat-body-splash-logo.webp" alt="Beat Body" />
+      <img className="splash-logo" src="/beat-body-splash-logo.webp" alt="Beat Body" decoding="async" />
       <div className="tile tile-a" />
       <div className="tile tile-b" />
       <div className="tile tile-c" />
@@ -1444,7 +1477,7 @@ function MobileMenu({ open, onClose, activeIndex, language, onLanguageChange, on
             onClose();
           }}
         >
-          <img src="/beat-body-logo.webp" alt="Beat Body" />
+          <img src="/beat-body-logo.webp" alt="Beat Body" decoding="async" />
         </a>
         <button className="mobile-menu-close" type="button" aria-label="Close menu" onClick={onClose}>
           <X />
@@ -1544,7 +1577,7 @@ function Hero({ activeIndex = 0, language, onLanguageChange, onNavigate }) {
     <section className="hero" aria-label="Beat Body EMS studio">
       <div className="hero-bg" />
       <div className="shade" />
-      <img key={`people-${replayKey}`} className="people" src="/people.webp" alt="" />
+      <img key={`people-${replayKey}`} className="people" src="/people.webp" alt="" decoding="async" />
 
       <header className={mobileMenuOpen ? "topbar mobile-menu-visible" : "topbar"}>
         <a
@@ -1556,7 +1589,7 @@ function Hero({ activeIndex = 0, language, onLanguageChange, onNavigate }) {
             onNavigate("home");
           }}
         >
-          <img src="/beat-body-logo.webp" alt="Beat Body" />
+          <img src="/beat-body-logo.webp" alt="Beat Body" decoding="async" />
         </a>
 
         <div className="center-controls">
@@ -1636,7 +1669,7 @@ function Hero({ activeIndex = 0, language, onLanguageChange, onNavigate }) {
         <h1 dir="ltr">
           <span className="title-word title-beat">Beat</span>
           <span className="title-body">
-            <img className="mobile-title-mark" src="/mobile-title-b.webp" alt="B" />
+            <img className="mobile-title-mark" src="/mobile-title-b.webp" alt="B" decoding="async" />
             <span className="title-word">ody</span>
             <sup>&reg;</sup>
           </span>
@@ -1674,7 +1707,7 @@ function Hero({ activeIndex = 0, language, onLanguageChange, onNavigate }) {
       </aside>
 
       <aside key={`proof-card-${replayKey}`} className="proof-card">
-        <img src="/proof-card.webp" alt={t.proof} />
+        <img src="/proof-card.webp" alt={t.proof} decoding="async" />
       </aside>
 
       <MobileMenu
@@ -1724,7 +1757,7 @@ function PostHeroHeader({ activeIndex = 0, language, onLanguageChange, journeyAc
           setMobileMenuOpen(false);
         }}
       >
-        <img src="/beat-body-logo.webp" alt="Beat Body" />
+        <img src="/beat-body-logo.webp" alt="Beat Body" decoding="async" />
       </a>
 
       <div className="center-controls">
@@ -1818,7 +1851,7 @@ function PrioritySection({ language = "fr" }) {
     <section className={`priority-section priority-section-${language}`} aria-label="Beat Body priority">
       <div className="priority-content">
         <p className="priority-kicker">
-          <img className="priority-vector" src="/priority-vector.webp" alt="" />
+          <img className="priority-vector" src="/priority-vector.webp" alt="" decoding="async" />
           <span className="priority-text-label">{text.priorityKicker}</span>
         </p>
 
@@ -1826,7 +1859,7 @@ function PrioritySection({ language = "fr" }) {
           <span className="priority-title-row priority-title-row-top">
             <span>{text.priorityWords[0]}</span>
             <span>{text.priorityWords[1]}</span>
-            <img src="/priority-pill-right.webp" alt="" />
+            <img src="/priority-pill-right.webp" alt="" decoding="async" />
           </span>
           <span className="priority-title-row priority-title-row-middle">
             <span>{text.priorityWords[2]}</span>
@@ -1834,12 +1867,12 @@ function PrioritySection({ language = "fr" }) {
             <span>{text.priorityWords[3]}</span>
           </span>
           <span className="priority-title-row priority-title-row-bottom">
-            <img src="/priority-pill-left.webp" alt="" />
+            <img src="/priority-pill-left.webp" alt="" decoding="async" />
             <span>{text.priorityWords[4]}</span>
             <span>{text.priorityWords[5]}</span>
           </span>
         </h2>
-        <img className="priority-suit" src="/priority-suit.webp" alt="EMS training suit" />
+        <img className="priority-suit" src="/priority-suit.webp" alt="EMS training suit" decoding="async" />
       </div>
     </section>
   );
@@ -1876,7 +1909,7 @@ function AboutVideoSection({ language = "fr" }) {
         </aside>
 
         <span className="about-tag-text">{text.servicesKicker}</span>
-        <img className="about-wordmark" src="/about-beat-body.webp" alt="Beat Body" />
+        <img className="about-wordmark" src="/about-beat-body.webp" alt="Beat Body" decoding="async" />
       </div>
     </section>
   );
@@ -1959,8 +1992,8 @@ function ServiceCard({ service, index, className = "", isActive = false, languag
       style={{ "--card-index": index }}
       tabIndex="0"
     >
-      <img className="service-base-image" src={service.base} alt="" />
-      <img className="service-active-image" src={service.active} alt="" />
+      <img className="service-base-image" src={service.base} alt="" decoding="async" />
+      <img className="service-active-image" src={service.active} alt="" decoding="async" />
 
       <div className="service-copy service-copy-base">
         <h3>{serviceTitle}</h3>
@@ -2023,7 +2056,7 @@ function ServicesSection({ onNavigate, items = services, language = "fr" }) {
       <div className="services-content">
         <div className="services-heading">
           <p className="services-kicker">
-            <img className="priority-vector" src="/priority-vector.webp" alt="" />
+            <img className="priority-vector" src="/priority-vector.webp" alt="" loading="lazy" decoding="async" />
             <span>{text.servicesKicker}</span>
           </p>
           <a
@@ -2071,10 +2104,11 @@ function DashboardAccessPage({ onSuccess, onCancel }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const adminEmail = SUPABASE_ADMIN_EMAIL.trim().toLowerCase();
-
   const submitLogin = async (event) => {
     event.preventDefault();
+    const { supabase, SUPABASE_ADMIN_EMAIL } = await loadSupabaseClient();
+    const adminEmail = SUPABASE_ADMIN_EMAIL.trim().toLowerCase();
+
     if (!supabase) {
       setError("Supabase n'est pas configuré.");
       return;
@@ -2105,7 +2139,7 @@ function DashboardAccessPage({ onSuccess, onCancel }) {
   return (
     <main className="dashboard-access-page">
       <section className="dashboard-access-card" aria-labelledby="dashboard-access-title">
-        <img src="/beat-body-logo.webp" alt="Beat Body" />
+        <img src="/beat-body-logo.webp" alt="Beat Body" loading="lazy" decoding="async" />
         <p className="dashboard-access-kicker">Archive interne</p>
         <h1 id="dashboard-access-title">Accès réservé</h1>
         <form onSubmit={submitLogin}>
@@ -2182,6 +2216,7 @@ function DashboardPage({
     const file = event.target.files?.[0];
     if (!file) return;
     let url = URL.createObjectURL(file);
+    const { supabase } = await loadSupabaseClient();
 
     if (supabase) {
       const safeName = file.name.replace(/[^a-z0-9.-]/gi, "-").toLowerCase();
@@ -2360,7 +2395,7 @@ function DashboardPage({
     <main className="dashboard-page">
       <aside className="dashboard-sidebar">
         <div className="dashboard-brand">
-          <img src="/beat-body-logo.webp" alt="Beat Body" />
+          <img src="/beat-body-logo.webp" alt="Beat Body" loading="lazy" decoding="async" />
         </div>
 
         <nav className="dashboard-nav">
@@ -2747,6 +2782,8 @@ function DashboardPage({
                     className="dashboard-upload-preview"
                     src={hoverTab === "before" ? beforeImageUrl : afterImageUrl}
                     alt=""
+                    loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <>
@@ -2863,7 +2900,7 @@ function ServicesPage({ items = servicesPageItems, language = "fr", onNavigate, 
       <div className="services-page-inner">
         <div className="services-heading services-page-heading">
           <p className="services-kicker">
-            <img className="priority-vector" src="/priority-vector.webp" alt="" />
+            <img className="priority-vector" src="/priority-vector.webp" alt="" loading="lazy" decoding="async" />
             <span>{text.servicesKicker}</span>
           </p>
         </div>
@@ -2994,7 +3031,7 @@ function WhySection({ language = "fr" }) {
               aria-selected={index === active}
               onClick={() => handleTabClick(index)}
             >
-              <img src={item.icon} alt="" />
+              <img src={item.icon} alt="" loading="lazy" decoding="async" />
               <span>{item.title}</span>
               <i key={index === active ? `why-progress-${progressKey}-${active}` : undefined} />
             </button>
@@ -3002,12 +3039,12 @@ function WhySection({ language = "fr" }) {
         </div>
 
         <div className="why-visual" key={current.image}>
-          <img className="why-main-image" src={current.image} alt="" />
-          <img className="why-preview" key={preview.image} src={preview.image} alt="" />
+          <img className="why-main-image" src={current.image} alt="" loading="lazy" decoding="async" />
+          <img className="why-preview" key={preview.image} src={preview.image} alt="" loading="lazy" decoding="async" />
           <p>{current.text}</p>
         </div>
         {outgoingImage && (
-          <img className="why-main-image-outgoing" key={outgoingImage} src={outgoingImage} alt="" />
+          <img className="why-main-image-outgoing" key={outgoingImage} src={outgoingImage} alt="" loading="lazy" decoding="async" />
         )}
       </div>
     </section>
@@ -3124,6 +3161,8 @@ function JourneySection({ language = "fr", onNavigate }) {
           className="journey-rail"
           src={`/journey-rail-${visibleSteps}.webp`}
           alt=""
+          loading="lazy"
+          decoding="async"
         />
       </div>
     </section>
@@ -3187,28 +3226,29 @@ function PerformanceSection({ language = "fr" }) {
         <h2 id="performance-title">{text.performanceTitle}</h2>
         <div className="performance-grid">
           <article className="performance-tile full-body" ref={(el) => { tileRefs.current[0] = el; }}>
-            <img src="/performance-full-body.webp" alt="" />
+            <img src="/performance-full-body.webp" alt="" loading="lazy" decoding="async" />
             <span>{text.performanceTiles[0]}</span>
           </article>
           <article className="performance-tile recovery" ref={(el) => { tileRefs.current[1] = el; }}>
-            <img src="/performance-recovery.webp" alt="" />
+            <img src="/performance-recovery.webp" alt="" loading="lazy" decoding="async" />
             <span>{text.performanceTiles[1]}</span>
           </article>
           <article className="performance-tile technology" ref={(el) => { tileRefs.current[2] = el; }}>
             <video
               ref={technologyVideoRef}
-              src="/performance-technology.mp4"
               poster="/performance-technology.webp"
               muted
               loop
               playsInline
-              preload="metadata"
+              preload="none"
               aria-label={text.performanceTiles[2]}
-            />
+            >
+              <source src="/performance-technology-optimized.mp4" type="video/mp4" />
+            </video>
             <span>{text.performanceTiles[2]}</span>
           </article>
           <article className="performance-tile experience" ref={(el) => { tileRefs.current[3] = el; }}>
-            <img src="/performance-experience.webp" alt="" />
+            <img src="/performance-experience.webp" alt="" loading="lazy" decoding="async" />
             <span>{text.performanceTiles[3]}</span>
           </article>
         </div>
@@ -3614,8 +3654,8 @@ function AboutHeroSection({ language = "fr" }) {
         </h1>
         <p>{text.aboutHeroSubtitle}<strong>{text.aboutHeroStrong}</strong></p>
       </div>
-      <img ref={suitRef} className="about-hero-suit" src="/about-suit.webp" alt="" />
-      <img className="about-hero-photo" src="/about-philosophy.webp" alt="Beat Body EMS preparation" />
+      <img ref={suitRef} className="about-hero-suit" src="/about-suit.webp" alt="" loading="lazy" decoding="async" />
+      <img className="about-hero-photo" src="/about-philosophy.webp" alt="Beat Body EMS preparation" loading="lazy" decoding="async" />
       <article className="about-philosophy">
         <h2>{text.philosophyTitle}</h2>
         <p>{text.philosophyBody}</p>
@@ -3772,13 +3812,14 @@ function FinalCtaSection({ staticMode = false, language = "fr", onNavigate }) {
       <div className="final-cta-shell">
         <video
           ref={videoRef}
-          src="/ems-final-cta.mp4"
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="none"
           aria-label="Beat Body EMS session"
-        />
+        >
+          <source src="/home-final-cta-video.mp4" type="video/mp4" />
+        </video>
         <div className="final-cta-overlay" />
         <div className="final-cta-content">
           <div className="final-cta-badge">
@@ -3790,7 +3831,7 @@ function FinalCtaSection({ staticMode = false, language = "fr", onNavigate }) {
           </div>
           <h2 id="final-cta-title">
             <span>{text.ctaTitle1}</span>
-            <span className="mark-inline"><img src="/priority-vector.webp" alt="" /></span>
+            <span className="mark-inline"><img src="/priority-vector.webp" alt="" loading="lazy" decoding="async" /></span>
             <span>{text.ctaTitle2}</span>
           </h2>
           <p>{text.ctaBody}</p>
@@ -3867,7 +3908,7 @@ function FooterSection({ staticMode = false, language = "fr", pageKey = "home", 
       <div className="footer-content">
         <div className="footer-brand-row">
           <div className="footer-brand">
-            <img src="/beat-body-logo.webp" alt="Beat Body" />
+            <img src="/beat-body-logo.webp" alt="Beat Body" loading="lazy" decoding="async" />
             <span />
             <p>{text.footerTagline}</p>
           </div>
@@ -4012,7 +4053,7 @@ function ServicesPageFooter({ language = "fr" }) {
       <div className="footer-content services-page-footer-content">
         <div className="footer-brand-row">
           <div className="footer-brand">
-            <img src="/beat-body-logo.webp" alt="Beat Body" />
+            <img src="/beat-body-logo.webp" alt="Beat Body" loading="lazy" decoding="async" />
             <span />
             <p>{text.footerTagline}</p>
           </div>
@@ -4290,8 +4331,8 @@ function ContactPage({ phones = [], emails = [], blockedDates = new Set(), langu
 
           <div className="contact-badge">
             <span className="contact-badge-avatars">
-              <img src="/people.webp" alt="" />
-              <img src="/proof-athlete.webp" alt="" />
+              <img src="/people.webp" alt="" loading="lazy" decoding="async" />
+              <img src="/proof-athlete.webp" alt="" loading="lazy" decoding="async" />
             </span>
             {text.contactBadge}
           </div>
@@ -4334,7 +4375,7 @@ function ContactPage({ phones = [], emails = [], blockedDates = new Set(), langu
           </div>
 
           <div className="contact-card-logo">
-            <img src="/contact-form-logo-tight.webp" alt="Beat Body" />
+            <img src="/contact-form-logo-tight.webp" alt="Beat Body" loading="lazy" decoding="async" />
           </div>
 
           {activeTab === "form" ? (

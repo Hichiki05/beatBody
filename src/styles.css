@@ -946,18 +946,6 @@ a {
   font-weight: 400;
 }
 
-.about-tag {
-  position: absolute;
-  z-index: 2;
-  left: clamp(34px, 3vw, 58px);
-  bottom: clamp(154px, 21vh, 198px);
-  width: clamp(210px, 20vw, 298px);
-  height: auto;
-  opacity: var(--about-enter);
-  transform: translateX(calc(var(--about-rest) * -142px));
-  transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.19, 1, 0.22, 1);
-}
-
 .about-tag-text {
   position: absolute;
   z-index: 2;
@@ -3507,11 +3495,6 @@ html[dir="rtl"] .journey-card {
   height: auto;
 }
 
-.priority-text {
-  width: clamp(92px, 10.5vw, 152px);
-  height: auto;
-}
-
 .priority-text-label {
   color: #d10912;
   font-size: clamp(10px, 1.25vw, 17px);
@@ -3962,12 +3945,6 @@ html[dir="rtl"] .journey-card {
     font-size: clamp(12px, 2.1vw, 16px);
   }
 
-  .about-tag {
-    left: clamp(20px, 4vw, 34px);
-    bottom: clamp(120px, 19vh, 164px);
-    width: clamp(170px, 30vw, 238px);
-  }
-
   .about-wordmark {
     width: min(74vw, 680px);
   }
@@ -4157,11 +4134,6 @@ html[dir="rtl"] .journey-card {
 
   .about-card-top a {
     width: 108px;
-  }
-
-  .about-tag {
-    bottom: 112px;
-    width: 190px;
   }
 
   .about-wordmark {
@@ -4587,10 +4559,6 @@ html[dir="rtl"] .journey-card {
     min-height: auto;
   }
 
-  .about-tag {
-    bottom: clamp(88px, 15vh, 138px);
-  }
-
   .services-content {
     --services-layout-width: min(94vw, 720px);
   }
@@ -5002,10 +4970,6 @@ html[dir="rtl"] .journey-card {
     width: clamp(17px, 5vw, 24px);
   }
 
-  .priority-text {
-    width: clamp(118px, 33vw, 158px);
-  }
-
   .priority-title {
     top: 14vh;
     width: min(92vw, 390px);
@@ -5155,12 +5119,6 @@ html[dir="rtl"] .journey-card {
 
   .about-card-top a {
     order: 2;
-  }
-
-  .about-tag {
-    left: 14px;
-    bottom: 86px;
-    width: 170px;
   }
 
   .about-wordmark {
